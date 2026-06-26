@@ -8,6 +8,7 @@ from app.schemas.action_card import (
     RiskLevel,
     TodoProposal,
 )
+from app.schemas.evidence import EvidenceItem, EvidenceSourceType
 
 __all__ = [
     "ActionCard",
@@ -15,6 +16,8 @@ __all__ = [
     "ActionKind",
     "ActionProposal",
     "CalendarEventProposal",
+    "EvidenceItem",
+    "EvidenceSourceType",
     "Priority",
     "RiskLevel",
     "TodoProposal",

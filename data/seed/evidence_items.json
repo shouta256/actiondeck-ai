@@ -1,0 +1,32 @@
+[
+  {
+    "id": "ev_001",
+    "source_type": "personal_note",
+    "source_id": "note_001",
+    "title": "返信方針メモ",
+    "snippet": "第一志望群は24時間以内に返信する。",
+    "relevance_score": 0.92,
+    "used_for": "priority",
+    "chunk_id": "chunk_note_001"
+  },
+  {
+    "id": "ev_002",
+    "source_type": "calendar_mock",
+    "source_id": "calendar_001",
+    "title": "授業予定",
+    "snippet": "2026-07-03 13:00-14:30は授業。候補日時の一部と衝突する。",
+    "relevance_score": 0.88,
+    "used_for": "schedule_risk",
+    "chunk_id": "chunk_calendar_001"
+  },
+  {
+    "id": "ev_003",
+    "source_type": "document",
+    "source_id": "doc_001",
+    "title": "面談前提出物の案内",
+    "snippet": "面談前日までに事前提出物を確認し、必要事項を提出する。",
+    "relevance_score": 0.81,
+    "used_for": "todo",
+    "chunk_id": "chunk_doc_001"
+  }
+]

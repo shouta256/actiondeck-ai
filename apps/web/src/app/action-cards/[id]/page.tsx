@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 
 import { getActionCard } from "@/features/action-cards/api";
 import type { ActionCard } from "@/features/action-cards/types";
+import { listActionCardEvidence } from "@/features/evidence/api";
+import type { EvidenceItem } from "@/features/evidence/types";
 
 type PageProps = {
   params: Promise<{
@@ -101,7 +103,49 @@ function ProposalPanel({ card }: { card: ActionCard }) {
   );
 }
 
-function ReviewPanel({ card }: { card: ActionCard }) {
+function EvidencePanel({ evidenceItems }: { evidenceItems: EvidenceItem[] }) {
+  return (
+    <Section title="Evidence">
+      {evidenceItems.length > 0 ? (
+        <ul className="divide-y divide-neutral-100">
+          {evidenceItems.map((item) => (
+            <li className="py-3" key={item.id}>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium text-neutral-950">
+                    {item.title}
+                  </p>
+                  <p className="mt-1 text-xs text-neutral-500">
+                    {item.source_type} / {item.used_for}
+                  </p>
+                </div>
+                <span className="font-mono text-xs text-neutral-500">
+                  {item.relevance_score.toFixed(2)}
+                </span>
+              </div>
+              <p className="mt-3 text-sm leading-6 text-neutral-700">
+                {item.snippet}
+              </p>
+              <p className="mt-2 font-mono text-xs text-neutral-500">
+                {item.chunk_id}
+              </p>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <EmptyText>表示できる根拠はありません。</EmptyText>
+      )}
+    </Section>
+  );
+}
+
+function ReviewPanel({
+  card,
+  evidenceItems,
+}: {
+  card: ActionCard;
+  evidenceItems: EvidenceItem[];
+}) {
   return (
     <aside className="space-y-4">
       <Section title="Card Status">
@@ -152,24 +196,17 @@ function ReviewPanel({ card }: { card: ActionCard }) {
         )}
       </Section>
 
-      <Section title="Evidence IDs">
-        {card.evidence_ids.length > 0 ? (
-          <ul className="space-y-2 font-mono text-xs text-neutral-700">
-            {card.evidence_ids.map((evidenceId) => (
-              <li key={evidenceId}>{evidenceId}</li>
-            ))}
-          </ul>
-        ) : (
-          <EmptyText>根拠IDはありません。</EmptyText>
-        )}
-      </Section>
+      <EvidencePanel evidenceItems={evidenceItems} />
     </aside>
   );
 }
 
 export default async function ActionCardDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const card = await getActionCard(id);
+  const [card, evidenceItems] = await Promise.all([
+    getActionCard(id),
+    listActionCardEvidence(id),
+  ]);
 
   if (!card) {
     notFound();
@@ -199,7 +236,7 @@ export default async function ActionCardDetailPage({ params }: PageProps) {
 
         <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
           <ProposalPanel card={card} />
-          <ReviewPanel card={card} />
+          <ReviewPanel card={card} evidenceItems={evidenceItems} />
         </div>
       </div>
     </main>
