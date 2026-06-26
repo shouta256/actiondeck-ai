@@ -1,5 +1,7 @@
 # ActionDeck AI
 
+[![CI](https://github.com/shouta256/actiondeck-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/shouta256/actiondeck-ai/actions/workflows/ci.yml)
+
 ActionDeck AIは、日常に散らばるメール、予定、メモ、資料を、根拠付きで承認可能な「次の行動カード」に変換するAI Agentアプリです。
 
 LINEヤフー新卒特別枠に提出するポートフォリオとして、MVPではGmail本番連携ではなく、手動インポートデータからAgent体験の縦スライスを作ります。
@@ -63,6 +65,16 @@ npm run start:db
 ```bash
 npm run stop:db
 ```
+
+## CI
+
+GitHub Actionsで、`main`へのpushとpull requestごとに最低限の確認を実行します。
+
+- Web: 依存関係のインストール、lint、production build
+- API: uvで依存関係を同期し、FastAPI appをimportできるか確認
+- Infra: Docker Compose設定の構文確認
+
+MVPでは自動デプロイやcoverage gateは入れず、mainが壊れていないことを確認する軽いCIに留めます。
 
 ## ディレクトリ構成
 
