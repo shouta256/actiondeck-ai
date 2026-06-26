@@ -1,25 +1,25 @@
-# Dependencies
+# 依存関係
 node_modules/
 .venv/
 venv/
 __pycache__/
 *.py[cod]
 
-# Environment
+# 環境変数
 .env
 .env.*
 !.env.example
 
-# Build outputs
+# ビルド成果物
 .next/
 dist/
 build/
 coverage/
 
-# Local files
+# ローカルファイル
 .DS_Store
 *.log
 
-# Database
+# データベース
 *.sqlite
 *.sqlite3

@@ -1,0 +1,12 @@
+[project]
+name = "actiondeck-api"
+version = "0.1.0"
+description = "ActionDeck AIのFastAPIバックエンド"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "asyncpg>=0.31.0",
+    "fastapi[standard]>=0.138.1",
+    "pydantic-settings>=2.14.2",
+    "sqlalchemy>=2.0.51",
+]

@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.3-pg18
+    container_name: actiondeck-postgres
+    environment:
+      POSTGRES_USER: actiondeck
+      POSTGRES_PASSWORD: actiondeck
+      POSTGRES_DB: actiondeck_ai
+    ports:
+      - "5432:5432"
+    volumes:
+      - actiondeck_postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U actiondeck -d actiondeck_ai"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  actiondeck_postgres_data:
