@@ -7,7 +7,9 @@ from app.schemas.agent_trace import (
 )
 from app.schemas.action_card import (
     ActionCard,
+    ActionCardReviewStatus,
     ActionCardStatus,
+    ActionCardStatusUpdate,
     ActionKind,
     ActionProposal,
     CalendarEventProposal,
@@ -19,7 +21,9 @@ from app.schemas.evidence import EvidenceItem, EvidenceSourceType
 
 __all__ = [
     "ActionCard",
+    "ActionCardReviewStatus",
     "ActionCardStatus",
+    "ActionCardStatusUpdate",
     "ActionKind",
     "ActionProposal",
     "AgentStepName",

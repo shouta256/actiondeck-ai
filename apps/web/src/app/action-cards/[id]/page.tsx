@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { listActionCardAgentSteps } from "@/features/agent-trace/api";
 import type { AgentTraceStep } from "@/features/agent-trace/types";
 import { getActionCard } from "@/features/action-cards/api";
+import { ReviewActions } from "@/features/action-cards/review-actions";
 import type { ActionCard } from "@/features/action-cards/types";
 import { listActionCardEvidence } from "@/features/evidence/api";
 import type { EvidenceItem } from "@/features/evidence/types";
@@ -219,6 +220,10 @@ function ReviewPanel({
           <Field label="Approval" value={card.approval_required} />
           <Field label="Source" value={card.source_item_id} />
         </dl>
+      </Section>
+
+      <Section title="Review">
+        <ReviewActions actionCardId={card.id} />
       </Section>
 
       <Section title="Actions">

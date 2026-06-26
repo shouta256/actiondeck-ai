@@ -1,7 +1,17 @@
 from fastapi import APIRouter, HTTPException
 
-from app.schemas import ActionCard, AgentTraceStep, EvidenceItem
-from app.services.action_card_store import get_action_card, list_action_cards
+from app.schemas import (
+    ActionCard,
+    ActionCardStatus,
+    ActionCardStatusUpdate,
+    AgentTraceStep,
+    EvidenceItem,
+)
+from app.services.action_card_store import (
+    get_action_card,
+    list_action_cards,
+    update_action_card_status,
+)
 from app.services.agent_trace_store import list_agent_steps_for_card
 from app.services.evidence_store import list_evidence_by_ids
 
@@ -16,6 +26,20 @@ def read_action_cards() -> tuple[ActionCard, ...]:
 @router.get("/{action_card_id}", response_model=ActionCard)
 def read_action_card(action_card_id: str) -> ActionCard:
     action_card = get_action_card(action_card_id)
+    if action_card is None:
+        raise HTTPException(status_code=404, detail="Action card not found")
+    return action_card
+
+
+@router.patch("/{action_card_id}/status", response_model=ActionCard)
+def update_action_card_review_status(
+    action_card_id: str,
+    payload: ActionCardStatusUpdate,
+) -> ActionCard:
+    action_card = update_action_card_status(
+        action_card_id,
+        ActionCardStatus(payload.status.value),
+    )
     if action_card is None:
         raise HTTPException(status_code=404, detail="Action card not found")
     return action_card

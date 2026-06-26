@@ -18,6 +18,11 @@ export type ActionCardStatus =
   | "rejected"
   | "completed";
 
+export type ActionCardReviewStatus = Extract<
+  ActionCardStatus,
+  "approved" | "edited" | "rejected"
+>;
+
 export type TodoProposal = {
   title: string;
   due_date?: string | null;

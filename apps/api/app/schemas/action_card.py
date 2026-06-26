@@ -36,6 +36,18 @@ class ActionCardStatus(StrEnum):
     COMPLETED = "completed"
 
 
+class ActionCardReviewStatus(StrEnum):
+    APPROVED = "approved"
+    EDITED = "edited"
+    REJECTED = "rejected"
+
+
+class ActionCardStatusUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    status: ActionCardReviewStatus
+
+
 class TodoProposal(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
