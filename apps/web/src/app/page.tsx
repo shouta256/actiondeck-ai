@@ -1,18 +1,44 @@
-import { actionCards } from "@/features/action-cards/sample-data";
+import { listActionCards } from "@/features/action-cards/api";
 import type { ActionCard } from "@/features/action-cards/types";
-
-const reviewStats = [
-  ["Pending", "1"],
-  ["Draft", "1"],
-  ["Evidence", "0"],
-  ["Agent runs", "0"],
-];
 
 function getDueDate(card: ActionCard) {
   return card.proposal.todos[0]?.due_date ?? "-";
 }
 
-export default function Home() {
+function buildReviewStats(actionCards: ActionCard[]) {
+  const pendingCount = actionCards.filter(
+    (card) => card.status === "pending_review",
+  ).length;
+  const draftCount = actionCards.filter((card) => card.status === "draft").length;
+  const evidenceCount = new Set(actionCards.flatMap((card) => card.evidence_ids))
+    .size;
+
+  return [
+    ["Pending", String(pendingCount)],
+    ["Draft", String(draftCount)],
+    ["Evidence", String(evidenceCount)],
+    ["Agent runs", "0"],
+  ];
+}
+
+async function loadActionCards() {
+  try {
+    return {
+      actionCards: await listActionCards(),
+      errorMessage: null,
+    };
+  } catch {
+    return {
+      actionCards: [],
+      errorMessage: "APIに接続できません。FastAPIを起動してください。",
+    };
+  }
+}
+
+export default async function Home() {
+  const { actionCards, errorMessage } = await loadActionCards();
+  const reviewStats = buildReviewStats(actionCards);
+
   return (
     <main className="min-h-screen bg-neutral-50 text-neutral-950">
       <header className="border-b border-neutral-200 bg-white">
@@ -35,6 +61,9 @@ export default function Home() {
               <p className="mt-1 text-sm text-neutral-500">
                 ユーザー確認が必要なカードを優先して表示します。
               </p>
+              {errorMessage ? (
+                <p className="mt-2 text-sm text-red-700">{errorMessage}</p>
+              ) : null}
             </div>
             <button className="h-8 rounded-md border border-neutral-300 bg-white px-3 text-sm font-medium text-neutral-800 hover:bg-neutral-100">
               Import
@@ -55,34 +84,42 @@ export default function Home() {
                 </tr>
               </thead>
               <tbody>
-                {actionCards.map((card) => (
-                  <tr
-                    key={card.title}
-                    className="border-b border-neutral-100 last:border-b-0"
-                  >
-                    <td className="px-4 py-3 font-medium text-neutral-950">
-                      {card.title}
-                    </td>
-                    <td className="px-4 py-3 font-mono text-xs text-neutral-600">
-                      {card.actions.join(", ")}
-                    </td>
-                    <td className="px-4 py-3 text-neutral-700">
-                      {card.priority}
-                    </td>
-                    <td className="px-4 py-3 text-neutral-700">
-                      {card.risk_level}
-                    </td>
-                    <td className="px-4 py-3 text-neutral-700">
-                      {card.confidence.toFixed(2)}
-                    </td>
-                    <td className="px-4 py-3 text-neutral-700">
-                      {getDueDate(card)}
-                    </td>
-                    <td className="px-4 py-3 font-mono text-xs text-neutral-700">
-                      {card.status}
+                {actionCards.length > 0 ? (
+                  actionCards.map((card) => (
+                    <tr
+                      key={card.id}
+                      className="border-b border-neutral-100 last:border-b-0"
+                    >
+                      <td className="px-4 py-3 font-medium text-neutral-950">
+                        {card.title}
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs text-neutral-600">
+                        {card.actions.join(", ")}
+                      </td>
+                      <td className="px-4 py-3 text-neutral-700">
+                        {card.priority}
+                      </td>
+                      <td className="px-4 py-3 text-neutral-700">
+                        {card.risk_level}
+                      </td>
+                      <td className="px-4 py-3 text-neutral-700">
+                        {card.confidence.toFixed(2)}
+                      </td>
+                      <td className="px-4 py-3 text-neutral-700">
+                        {getDueDate(card)}
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs text-neutral-700">
+                        {card.status}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td className="px-4 py-6 text-sm text-neutral-500" colSpan={7}>
+                      表示できるAction Cardがありません。
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
@@ -102,7 +139,7 @@ export default function Home() {
             ))}
           </dl>
           <p className="mt-4 border-t border-neutral-100 pt-4 text-sm leading-6 text-neutral-500">
-            Action Card schemaに合わせた型付きデータを表示しています。
+            FastAPIのAction Card APIから取得したデータを表示しています。
           </p>
         </aside>
       </div>

@@ -42,6 +42,8 @@ npm run dev:web
 
 http://localhost:3000 を開きます。
 
+WebはServer ComponentからFastAPIを呼びます。APIのURLは `apps/web/.env.local` の `ACTIONDECK_API_BASE_URL` で変更できます。
+
 ### バックエンド
 
 ```bash

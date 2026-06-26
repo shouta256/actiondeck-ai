@@ -20,19 +20,19 @@ export type ActionCardStatus =
 
 export type TodoProposal = {
   title: string;
-  due_date?: string;
+  due_date?: string | null;
 };
 
 export type CalendarEventProposal = {
   title: string;
   start: string;
   end: string;
-  location?: string;
+  location?: string | null;
 };
 
 export type ActionProposal = {
-  reply_draft?: string;
-  calendar_event?: CalendarEventProposal;
+  reply_draft?: string | null;
+  calendar_event?: CalendarEventProposal | null;
   todos: TodoProposal[];
 };
 
