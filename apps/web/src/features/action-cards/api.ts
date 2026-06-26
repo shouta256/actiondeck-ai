@@ -17,3 +17,19 @@ export async function listActionCards(): Promise<ActionCard[]> {
 
   return response.json();
 }
+
+export async function getActionCard(id: string): Promise<ActionCard | null> {
+  const response = await fetch(`${getApiBaseUrl()}/action-cards/${id}`, {
+    cache: "no-store",
+  });
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch action card: ${response.status}`);
+  }
+
+  return response.json();
+}

@@ -1,0 +1,207 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+
+import { getActionCard } from "@/features/action-cards/api";
+import type { ActionCard } from "@/features/action-cards/types";
+
+type PageProps = {
+  params: Promise<{
+    id: string;
+  }>;
+};
+
+function formatDateTime(value: string) {
+  return value.replace("T", " ");
+}
+
+function Field({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | number | boolean;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-4 py-3 text-sm">
+      <dt className="text-neutral-500">{label}</dt>
+      <dd className="text-right font-medium text-neutral-950">{String(value)}</dd>
+    </div>
+  );
+}
+
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-md border border-neutral-200 bg-white p-5">
+      <h2 className="text-sm font-semibold">{title}</h2>
+      <div className="mt-4">{children}</div>
+    </section>
+  );
+}
+
+function EmptyText({ children }: { children: React.ReactNode }) {
+  return <p className="text-sm text-neutral-500">{children}</p>;
+}
+
+function ProposalPanel({ card }: { card: ActionCard }) {
+  const calendarEvent = card.proposal.calendar_event;
+
+  return (
+    <div className="space-y-4">
+      <Section title="Summary">
+        <p className="text-sm leading-6 text-neutral-700">{card.summary}</p>
+      </Section>
+
+      <Section title="Reply Draft">
+        {card.proposal.reply_draft ? (
+          <p className="whitespace-pre-wrap text-sm leading-6 text-neutral-700">
+            {card.proposal.reply_draft}
+          </p>
+        ) : (
+          <EmptyText>返信案はありません。</EmptyText>
+        )}
+      </Section>
+
+      <Section title="Calendar Proposal">
+        {calendarEvent ? (
+          <dl className="divide-y divide-neutral-100">
+            <Field label="Title" value={calendarEvent.title} />
+            <Field label="Start" value={formatDateTime(calendarEvent.start)} />
+            <Field label="End" value={formatDateTime(calendarEvent.end)} />
+            <Field label="Location" value={calendarEvent.location ?? "-"} />
+          </dl>
+        ) : (
+          <EmptyText>予定案はありません。</EmptyText>
+        )}
+      </Section>
+
+      <Section title="Todos">
+        {card.proposal.todos.length > 0 ? (
+          <ul className="divide-y divide-neutral-100">
+            {card.proposal.todos.map((todo) => (
+              <li
+                className="flex items-start justify-between gap-4 py-3 text-sm"
+                key={`${todo.title}-${todo.due_date ?? "none"}`}
+              >
+                <span className="font-medium text-neutral-950">{todo.title}</span>
+                <span className="text-neutral-500">{todo.due_date ?? "-"}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <EmptyText>ToDo案はありません。</EmptyText>
+        )}
+      </Section>
+    </div>
+  );
+}
+
+function ReviewPanel({ card }: { card: ActionCard }) {
+  return (
+    <aside className="space-y-4">
+      <Section title="Card Status">
+        <dl className="divide-y divide-neutral-100">
+          <Field label="Status" value={card.status} />
+          <Field label="Priority" value={card.priority} />
+          <Field label="Risk" value={card.risk_level} />
+          <Field label="Confidence" value={card.confidence.toFixed(2)} />
+          <Field label="Approval" value={card.approval_required} />
+          <Field label="Source" value={card.source_item_id} />
+        </dl>
+      </Section>
+
+      <Section title="Actions">
+        <div className="flex flex-wrap gap-2">
+          {card.actions.map((action) => (
+            <span
+              className="rounded border border-neutral-200 bg-neutral-50 px-2 py-1 font-mono text-xs text-neutral-700"
+              key={action}
+            >
+              {action}
+            </span>
+          ))}
+        </div>
+      </Section>
+
+      <Section title="Missing Info">
+        {card.missing_info.length > 0 ? (
+          <ul className="space-y-2 text-sm text-neutral-700">
+            {card.missing_info.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        ) : (
+          <EmptyText>不足情報はありません。</EmptyText>
+        )}
+      </Section>
+
+      <Section title="Safety Notes">
+        {card.safety_notes.length > 0 ? (
+          <ul className="space-y-2 text-sm text-neutral-700">
+            {card.safety_notes.map((note) => (
+              <li key={note}>{note}</li>
+            ))}
+          </ul>
+        ) : (
+          <EmptyText>安全メモはありません。</EmptyText>
+        )}
+      </Section>
+
+      <Section title="Evidence IDs">
+        {card.evidence_ids.length > 0 ? (
+          <ul className="space-y-2 font-mono text-xs text-neutral-700">
+            {card.evidence_ids.map((evidenceId) => (
+              <li key={evidenceId}>{evidenceId}</li>
+            ))}
+          </ul>
+        ) : (
+          <EmptyText>根拠IDはありません。</EmptyText>
+        )}
+      </Section>
+    </aside>
+  );
+}
+
+export default async function ActionCardDetailPage({ params }: PageProps) {
+  const { id } = await params;
+  const card = await getActionCard(id);
+
+  if (!card) {
+    notFound();
+  }
+
+  return (
+    <main className="min-h-screen bg-neutral-50 text-neutral-950">
+      <header className="border-b border-neutral-200 bg-white">
+        <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between px-6">
+          <div className="flex items-baseline gap-3">
+            <Link className="text-base font-semibold" href="/">
+              ActionDeck AI
+            </Link>
+            <span className="text-sm text-neutral-500">Action Card Detail</span>
+          </div>
+          <Link className="text-sm text-neutral-500 hover:text-neutral-950" href="/">
+            Back to deck
+          </Link>
+        </div>
+      </header>
+
+      <div className="mx-auto w-full max-w-7xl px-6 py-6">
+        <div className="mb-5">
+          <p className="font-mono text-xs text-neutral-500">{card.id}</p>
+          <h1 className="mt-2 text-xl font-semibold">{card.title}</h1>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+          <ProposalPanel card={card} />
+          <ReviewPanel card={card} />
+        </div>
+      </div>
+    </main>
+  );
+}

@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { listActionCards } from "@/features/action-cards/api";
 import type { ActionCard } from "@/features/action-cards/types";
 
@@ -91,7 +93,12 @@ export default async function Home() {
                       className="border-b border-neutral-100 last:border-b-0"
                     >
                       <td className="px-4 py-3 font-medium text-neutral-950">
-                        {card.title}
+                        <Link
+                          className="underline-offset-4 hover:underline"
+                          href={`/action-cards/${card.id}`}
+                        >
+                          {card.title}
+                        </Link>
                       </td>
                       <td className="px-4 py-3 font-mono text-xs text-neutral-600">
                         {card.actions.join(", ")}
