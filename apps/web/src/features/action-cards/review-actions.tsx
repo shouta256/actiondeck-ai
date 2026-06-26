@@ -7,7 +7,7 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 
 import { updateActionCardStatus } from "./api";
-import type { ActionCardReviewStatus } from "./types";
+import type { ActionCardReviewStatus, ActionCardStatus } from "./types";
 
 type ReviewAction = {
   label: string;
@@ -32,7 +32,13 @@ const REVIEW_ACTIONS: ReviewAction[] = [
   },
 ];
 
-export function ReviewActions({ actionCardId }: { actionCardId: string }) {
+export function ReviewActions({
+  actionCardId,
+  currentStatus,
+}: {
+  actionCardId: string;
+  currentStatus: ActionCardStatus;
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [selectedStatus, setSelectedStatus] =
@@ -61,7 +67,7 @@ export function ReviewActions({ actionCardId }: { actionCardId: string }) {
         {REVIEW_ACTIONS.map((action) => (
           <Button
             className="w-full justify-center rounded-md"
-            disabled={isPending}
+            disabled={isPending || currentStatus === action.status}
             key={action.status}
             onClick={() => handleStatusChange(action.status)}
             type="button"

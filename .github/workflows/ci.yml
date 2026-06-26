@@ -61,7 +61,7 @@ jobs:
 
       - name: Import app
         working-directory: apps/api
-        run: uv run python -c "from main import app; from app.schemas import ActionCard, EvidenceItem, AgentTraceStep, ActionCardStatusUpdate; from app.services.action_card_store import list_action_cards; from app.services.evidence_store import list_evidence_items; from app.services.agent_trace_store import list_agent_steps; cards = list_action_cards(); evidence = list_evidence_items(); steps = list_agent_steps(); print(app.title, ActionCard.__name__, len(cards), EvidenceItem.__name__, len(evidence), AgentTraceStep.__name__, len(steps), ActionCardStatusUpdate.__name__)"
+        run: uv run python -c "from main import app; from app.schemas import ActionCard, EvidenceItem, AgentTraceStep, ActionCardStatusUpdate, ReviewEvent; from app.services.action_card_store import list_action_cards; from app.services.evidence_store import list_evidence_items; from app.services.agent_trace_store import list_agent_steps; cards = list_action_cards(); evidence = list_evidence_items(); steps = list_agent_steps(); print(app.title, ActionCard.__name__, len(cards), EvidenceItem.__name__, len(evidence), AgentTraceStep.__name__, len(steps), ActionCardStatusUpdate.__name__, ReviewEvent.__name__)"
 
   infra:
     name: Infra

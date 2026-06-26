@@ -8,6 +8,8 @@ import { ReviewActions } from "@/features/action-cards/review-actions";
 import type { ActionCard } from "@/features/action-cards/types";
 import { listActionCardEvidence } from "@/features/evidence/api";
 import type { EvidenceItem } from "@/features/evidence/types";
+import { listActionCardReviewEvents } from "@/features/review-events/api";
+import type { ReviewEvent } from "@/features/review-events/types";
 
 type PageProps = {
   params: Promise<{
@@ -142,6 +144,39 @@ function EvidencePanel({ evidenceItems }: { evidenceItems: EvidenceItem[] }) {
   );
 }
 
+function ReviewHistoryPanel({ events }: { events: ReviewEvent[] }) {
+  return (
+    <Section title="Review History">
+      {events.length > 0 ? (
+        <ul className="divide-y divide-neutral-100">
+          {events.map((event) => (
+            <li className="py-3" key={event.id}>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-mono text-sm text-neutral-950">
+                    {event.to_status}
+                  </p>
+                  <p className="mt-1 text-xs text-neutral-500">
+                    {event.actor} / {formatDateTime(event.created_at)}
+                  </p>
+                </div>
+                <span className="font-mono text-xs text-neutral-500">
+                  {event.id}
+                </span>
+              </div>
+              <p className="mt-3 font-mono text-xs text-neutral-600">
+                {event.from_status} → {event.to_status}
+              </p>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <EmptyText>レビュー履歴はまだありません。</EmptyText>
+      )}
+    </Section>
+  );
+}
+
 function AgentTracePanel({ steps }: { steps: AgentTraceStep[] }) {
   return (
     <Section title="Agent Trace">
@@ -205,9 +240,11 @@ function AgentTracePanel({ steps }: { steps: AgentTraceStep[] }) {
 function ReviewPanel({
   card,
   evidenceItems,
+  reviewEvents,
 }: {
   card: ActionCard;
   evidenceItems: EvidenceItem[];
+  reviewEvents: ReviewEvent[];
 }) {
   return (
     <aside className="space-y-4">
@@ -223,8 +260,10 @@ function ReviewPanel({
       </Section>
 
       <Section title="Review">
-        <ReviewActions actionCardId={card.id} />
+        <ReviewActions actionCardId={card.id} currentStatus={card.status} />
       </Section>
+
+      <ReviewHistoryPanel events={reviewEvents} />
 
       <Section title="Actions">
         <div className="flex flex-wrap gap-2">
@@ -270,10 +309,11 @@ function ReviewPanel({
 
 export default async function ActionCardDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const [card, evidenceItems, agentSteps] = await Promise.all([
+  const [card, evidenceItems, agentSteps, reviewEvents] = await Promise.all([
     getActionCard(id),
     listActionCardEvidence(id),
     listActionCardAgentSteps(id),
+    listActionCardReviewEvents(id),
   ]);
 
   if (!card) {
@@ -307,7 +347,11 @@ export default async function ActionCardDetailPage({ params }: PageProps) {
             <ProposalPanel card={card} />
             <AgentTracePanel steps={agentSteps} />
           </div>
-          <ReviewPanel card={card} evidenceItems={evidenceItems} />
+          <ReviewPanel
+            card={card}
+            evidenceItems={evidenceItems}
+            reviewEvents={reviewEvents}
+          />
         </div>
       </div>
     </main>
