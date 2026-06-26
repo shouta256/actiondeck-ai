@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { listActionCardAgentSteps } from "@/features/agent-trace/api";
+import type { AgentTraceStep } from "@/features/agent-trace/types";
 import { getActionCard } from "@/features/action-cards/api";
 import type { ActionCard } from "@/features/action-cards/types";
 import { listActionCardEvidence } from "@/features/evidence/api";
@@ -139,6 +141,66 @@ function EvidencePanel({ evidenceItems }: { evidenceItems: EvidenceItem[] }) {
   );
 }
 
+function AgentTracePanel({ steps }: { steps: AgentTraceStep[] }) {
+  return (
+    <Section title="Agent Trace">
+      {steps.length > 0 ? (
+        <ol className="divide-y divide-neutral-100">
+          {steps.map((step) => (
+            <li className="py-4" key={`${step.action_card_id}-${step.sequence}`}>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded border border-neutral-200 bg-neutral-50 font-mono text-xs text-neutral-600">
+                    {step.sequence}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate font-mono text-sm text-neutral-950">
+                      {step.step_name}
+                    </p>
+                    <p className="mt-1 text-xs text-neutral-500">
+                      {step.status} / {step.latency_ms}ms
+                    </p>
+                  </div>
+                </div>
+                {step.token_usage ? (
+                  <span className="font-mono text-xs text-neutral-500">
+                    {step.token_usage.total_tokens} tokens
+                  </span>
+                ) : null}
+              </div>
+
+              <div className="mt-3 grid gap-3 text-sm leading-6 text-neutral-700 md:grid-cols-2">
+                <p>{step.input_summary}</p>
+                <p>{step.output_summary}</p>
+              </div>
+
+              {step.tool_calls.length > 0 ? (
+                <ul className="mt-3 space-y-2">
+                  {step.tool_calls.map((toolCall) => (
+                    <li
+                      className="rounded border border-neutral-200 bg-neutral-50 p-3 text-sm"
+                      key={`${step.sequence}-${toolCall.name}`}
+                    >
+                      <p className="font-mono text-xs text-neutral-500">
+                        {toolCall.name}
+                      </p>
+                      <p className="mt-2 text-neutral-700">
+                        {toolCall.input_summary} → {toolCall.output_summary}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <EmptyText>表示できる処理履歴はありません。</EmptyText>
+      )}
+    </Section>
+  );
+}
+
 function ReviewPanel({
   card,
   evidenceItems,
@@ -203,9 +265,10 @@ function ReviewPanel({
 
 export default async function ActionCardDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const [card, evidenceItems] = await Promise.all([
+  const [card, evidenceItems, agentSteps] = await Promise.all([
     getActionCard(id),
     listActionCardEvidence(id),
+    listActionCardAgentSteps(id),
   ]);
 
   if (!card) {
@@ -235,7 +298,10 @@ export default async function ActionCardDetailPage({ params }: PageProps) {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-          <ProposalPanel card={card} />
+          <div className="space-y-4">
+            <ProposalPanel card={card} />
+            <AgentTracePanel steps={agentSteps} />
+          </div>
           <ReviewPanel card={card} evidenceItems={evidenceItems} />
         </div>
       </div>

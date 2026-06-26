@@ -1,3 +1,10 @@
+from app.schemas.agent_trace import (
+    AgentStepName,
+    AgentStepStatus,
+    AgentTokenUsage,
+    AgentToolCall,
+    AgentTraceStep,
+)
 from app.schemas.action_card import (
     ActionCard,
     ActionCardStatus,
@@ -15,6 +22,11 @@ __all__ = [
     "ActionCardStatus",
     "ActionKind",
     "ActionProposal",
+    "AgentStepName",
+    "AgentStepStatus",
+    "AgentTokenUsage",
+    "AgentToolCall",
+    "AgentTraceStep",
     "CalendarEventProposal",
     "EvidenceItem",
     "EvidenceSourceType",

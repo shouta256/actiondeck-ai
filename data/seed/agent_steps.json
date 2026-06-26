@@ -1,0 +1,123 @@
+[
+  {
+    "action_card_id": "action_001",
+    "sequence": 1,
+    "step_name": "triage",
+    "status": "completed",
+    "input_summary": "inbox_001の件名、本文、差出人を確認。",
+    "output_summary": "面談日程調整として分類。返信、予定確認、事前準備が必要と判断。",
+    "tool_calls": [],
+    "latency_ms": 120,
+    "token_usage": {
+      "input_tokens": 420,
+      "output_tokens": 96,
+      "total_tokens": 516
+    }
+  },
+  {
+    "action_card_id": "action_001",
+    "sequence": 2,
+    "step_name": "evidence_retrieval",
+    "status": "completed",
+    "input_summary": "返信優先度、候補日時、事前提出物に関係する情報を検索。",
+    "output_summary": "返信方針メモ、授業予定、事前提出物の案内を根拠として採用。",
+    "tool_calls": [
+      {
+        "name": "search_personal_notes",
+        "input_summary": "第一志望群 返信 方針",
+        "output_summary": "ev_001を取得"
+      },
+      {
+        "name": "search_calendar",
+        "input_summary": "2026-07-03 14:00 周辺の予定",
+        "output_summary": "ev_002を取得"
+      },
+      {
+        "name": "search_documents",
+        "input_summary": "面談 事前提出物",
+        "output_summary": "ev_003を取得"
+      }
+    ],
+    "latency_ms": 310,
+    "token_usage": {
+      "input_tokens": 680,
+      "output_tokens": 140,
+      "total_tokens": 820
+    }
+  },
+  {
+    "action_card_id": "action_001",
+    "sequence": 3,
+    "step_name": "action_planning",
+    "status": "completed",
+    "input_summary": "分類結果と根拠をもとに、ユーザーが承認できる提案に整形。",
+    "output_summary": "返信案、予定案、事前確認ToDoを1枚のAction Cardにまとめた。",
+    "tool_calls": [],
+    "latency_ms": 240,
+    "token_usage": {
+      "input_tokens": 760,
+      "output_tokens": 210,
+      "total_tokens": 970
+    }
+  },
+  {
+    "action_card_id": "action_001",
+    "sequence": 4,
+    "step_name": "safety_check",
+    "status": "completed",
+    "input_summary": "作成された提案のリスクと承認要否を確認。",
+    "output_summary": "メール送信と予定作成はユーザー承認必須としてpending_reviewに設定。",
+    "tool_calls": [],
+    "latency_ms": 90,
+    "token_usage": {
+      "input_tokens": 360,
+      "output_tokens": 80,
+      "total_tokens": 440
+    }
+  },
+  {
+    "action_card_id": "action_002",
+    "sequence": 1,
+    "step_name": "triage",
+    "status": "completed",
+    "input_summary": "inbox_002の締切に関する本文を確認。",
+    "output_summary": "返信不要で、ToDo作成のみが必要な通知として分類。",
+    "tool_calls": [],
+    "latency_ms": 95,
+    "token_usage": {
+      "input_tokens": 300,
+      "output_tokens": 72,
+      "total_tokens": 372
+    }
+  },
+  {
+    "action_card_id": "action_002",
+    "sequence": 2,
+    "step_name": "action_planning",
+    "status": "completed",
+    "input_summary": "締切情報をToDoとして扱える形式に変換。",
+    "output_summary": "事前提出物を確認するToDoを作成。",
+    "tool_calls": [],
+    "latency_ms": 150,
+    "token_usage": {
+      "input_tokens": 340,
+      "output_tokens": 90,
+      "total_tokens": 430
+    }
+  },
+  {
+    "action_card_id": "action_002",
+    "sequence": 3,
+    "step_name": "safety_check",
+    "status": "completed",
+    "input_summary": "ToDo作成のリスクと承認要否を確認。",
+    "output_summary": "低リスクかつ外部送信なしのため、承認不要と判断。",
+    "tool_calls": [],
+    "latency_ms": 70,
+    "token_usage": {
+      "input_tokens": 220,
+      "output_tokens": 58,
+      "total_tokens": 278
+    }
+  }
+]
