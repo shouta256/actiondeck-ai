@@ -61,7 +61,7 @@ jobs:
 
       - name: Import app
         working-directory: apps/api
-        run: uv run python -c "from main import app; print(app.title)"
+        run: uv run python -c "from main import app; from app.schemas import ActionCard; print(app.title, ActionCard.__name__)"
 
   infra:
     name: Infra

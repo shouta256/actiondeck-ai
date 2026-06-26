@@ -1,23 +1,5 @@
-const actionCards = [
-  {
-    title: "面談候補日への返信と準備",
-    actionType: "reply_and_schedule_and_prepare",
-    priority: "high",
-    confidence: "0.84",
-    riskLevel: "medium",
-    dueDate: "2026-07-02",
-    status: "pending_review",
-  },
-  {
-    title: "事前提出物の締切確認",
-    actionType: "create_todo",
-    priority: "medium",
-    confidence: "0.78",
-    riskLevel: "low",
-    dueDate: "2026-07-01",
-    status: "draft",
-  },
-];
+import { actionCards } from "@/features/action-cards/sample-data";
+import type { ActionCard } from "@/features/action-cards/types";
 
 const reviewStats = [
   ["Pending", "1"],
@@ -25,6 +7,10 @@ const reviewStats = [
   ["Evidence", "0"],
   ["Agent runs", "0"],
 ];
+
+function getDueDate(card: ActionCard) {
+  return card.proposal.todos[0]?.due_date ?? "-";
+}
 
 export default function Home() {
   return (
@@ -60,7 +46,7 @@ export default function Home() {
               <thead className="border-b border-neutral-200 bg-neutral-100 text-xs font-medium uppercase text-neutral-500">
                 <tr>
                   <th className="px-4 py-3">Title</th>
-                  <th className="px-4 py-3">Action Type</th>
+                  <th className="px-4 py-3">Actions</th>
                   <th className="px-4 py-3">Priority</th>
                   <th className="px-4 py-3">Risk</th>
                   <th className="px-4 py-3">Confidence</th>
@@ -78,19 +64,19 @@ export default function Home() {
                       {card.title}
                     </td>
                     <td className="px-4 py-3 font-mono text-xs text-neutral-600">
-                      {card.actionType}
+                      {card.actions.join(", ")}
                     </td>
                     <td className="px-4 py-3 text-neutral-700">
                       {card.priority}
                     </td>
                     <td className="px-4 py-3 text-neutral-700">
-                      {card.riskLevel}
+                      {card.risk_level}
                     </td>
                     <td className="px-4 py-3 text-neutral-700">
-                      {card.confidence}
+                      {card.confidence.toFixed(2)}
                     </td>
                     <td className="px-4 py-3 text-neutral-700">
-                      {card.dueDate}
+                      {getDueDate(card)}
                     </td>
                     <td className="px-4 py-3 font-mono text-xs text-neutral-700">
                       {card.status}
@@ -116,7 +102,7 @@ export default function Home() {
             ))}
           </dl>
           <p className="mt-4 border-t border-neutral-100 pt-4 text-sm leading-6 text-neutral-500">
-            次の実装でAction Card schemaを定義し、この静的データを型付きデータに置き換えます。
+            Action Card schemaに合わせた型付きデータを表示しています。
           </p>
         </aside>
       </div>

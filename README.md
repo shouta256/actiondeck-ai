@@ -91,4 +91,6 @@ infra/        # ローカルインフラ設定
 
 ## 次の実装
 
-次はAction Card JSON schemaを確定し、フロントエンド、API、DB、Agent出力、評価スクリプトの共通契約を作ります。
+Action Card schemaは [docs/action_card_schema.md](docs/action_card_schema.md) に整理しています。
+
+次はschemaに沿ったseedデータを作り、FastAPIからAction Card一覧を返す最小APIを実装します。
