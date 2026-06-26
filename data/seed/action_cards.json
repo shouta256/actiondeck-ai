@@ -1,0 +1,56 @@
+[
+  {
+    "schema_version": "1.0",
+    "id": "action_001",
+    "source_item_id": "inbox_001",
+    "title": "面談候補日への返信と準備",
+    "actions": ["draft_reply", "propose_schedule", "create_todo"],
+    "priority": "high",
+    "risk_level": "medium",
+    "confidence": 0.84,
+    "approval_required": true,
+    "status": "pending_review",
+    "summary": "面談日程調整メール。返信、予定確認、事前準備が必要。",
+    "proposal": {
+      "reply_draft": "ご連絡ありがとうございます。以下の日程で参加可能です。",
+      "calendar_event": {
+        "title": "LINEヤフー 面談",
+        "start": "2026-07-03T14:00:00",
+        "end": "2026-07-03T14:30:00"
+      },
+      "todos": [
+        {
+          "title": "事前提出物を確認する",
+          "due_date": "2026-07-02"
+        }
+      ]
+    },
+    "evidence_ids": ["ev_001", "ev_002", "ev_003"],
+    "missing_info": [],
+    "safety_notes": ["メール送信と予定作成はユーザー承認が必要です"]
+  },
+  {
+    "schema_version": "1.0",
+    "id": "action_002",
+    "source_item_id": "inbox_002",
+    "title": "事前提出物の締切確認",
+    "actions": ["create_todo"],
+    "priority": "medium",
+    "risk_level": "low",
+    "confidence": 0.78,
+    "approval_required": false,
+    "status": "draft",
+    "summary": "事前提出物の確認タスクを作成する。",
+    "proposal": {
+      "todos": [
+        {
+          "title": "事前提出物を確認する",
+          "due_date": "2026-07-01"
+        }
+      ]
+    },
+    "evidence_ids": [],
+    "missing_info": [],
+    "safety_notes": []
+  }
+]

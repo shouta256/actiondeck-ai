@@ -54,6 +54,12 @@ npm run dev:api
 curl http://127.0.0.1:8000/health
 ```
 
+Action Card一覧:
+
+```bash
+curl http://127.0.0.1:8000/action-cards
+```
+
 ### PostgreSQL
 
 ```bash
