@@ -52,5 +52,88 @@
     "evidence_ids": [],
     "missing_info": [],
     "safety_notes": []
+  },
+  {
+    "schema_version": "1.0",
+    "id": "action_003",
+    "source_item_id": "inbox_003",
+    "title": "面談候補日時の確認",
+    "actions": ["request_missing_info"],
+    "priority": "medium",
+    "risk_level": "low",
+    "confidence": 0.72,
+    "approval_required": false,
+    "status": "draft",
+    "summary": "面談希望はあるが候補日時が不足しているため、先に候補日時を確認する。",
+    "proposal": {},
+    "evidence_ids": ["ev_004"],
+    "missing_info": ["候補日時が不足しています"],
+    "safety_notes": ["候補日時がないため、予定案や返信案は作成しません"]
+  },
+  {
+    "schema_version": "1.0",
+    "id": "action_004",
+    "source_item_id": "inbox_004",
+    "title": "返信不要の案内",
+    "actions": ["ignore"],
+    "priority": "low",
+    "risk_level": "low",
+    "confidence": 0.9,
+    "approval_required": false,
+    "status": "draft",
+    "summary": "イベント情報の案内であり、返信やタスク化は不要。",
+    "proposal": {},
+    "evidence_ids": [],
+    "missing_info": [],
+    "safety_notes": []
+  },
+  {
+    "schema_version": "1.0",
+    "id": "action_005",
+    "source_item_id": "inbox_005",
+    "title": "ポートフォリオ資料の確認",
+    "actions": ["create_todo"],
+    "priority": "medium",
+    "risk_level": "low",
+    "confidence": 0.82,
+    "approval_required": false,
+    "status": "draft",
+    "summary": "提出前にポートフォリオ資料のリンクと説明文を確認する。",
+    "proposal": {
+      "todos": [
+        {
+          "title": "ポートフォリオ資料のリンクと説明文を確認する",
+          "due_date": "2026-07-05"
+        }
+      ]
+    },
+    "evidence_ids": ["ev_005"],
+    "missing_info": [],
+    "safety_notes": []
+  },
+  {
+    "schema_version": "1.0",
+    "id": "action_006",
+    "source_item_id": "inbox_006",
+    "title": "面談候補日の衝突確認",
+    "actions": ["draft_reply", "propose_schedule"],
+    "priority": "high",
+    "risk_level": "medium",
+    "confidence": 0.83,
+    "approval_required": true,
+    "status": "pending_review",
+    "summary": "10:00の候補は予定と衝突するため、空いている11:00の候補を返信案と予定案にする。",
+    "proposal": {
+      "reply_draft": "ご連絡ありがとうございます。2026年7月5日 11:00-11:30で参加可能です。",
+      "calendar_event": {
+        "title": "LINEヤフー 面談",
+        "start": "2026-07-05T11:00:00",
+        "end": "2026-07-05T11:30:00"
+      },
+      "todos": []
+    },
+    "evidence_ids": ["ev_001", "ev_006"],
+    "missing_info": [],
+    "safety_notes": ["10:00の候補は既存予定と衝突します", "メール返信と予定作成はユーザー承認が必要です"]
   }
 ]

@@ -28,5 +28,35 @@
     "relevance_score": 0.81,
     "used_for": "todo",
     "chunk_id": "chunk_doc_001"
+  },
+  {
+    "id": "ev_004",
+    "source_type": "personal_note",
+    "source_id": "note_002",
+    "title": "日程調整の不足情報ルール",
+    "snippet": "候補日時が書かれていない日程調整は、返信案を作る前に候補日時を確認する。",
+    "relevance_score": 0.86,
+    "used_for": "missing_info",
+    "chunk_id": "chunk_note_002"
+  },
+  {
+    "id": "ev_005",
+    "source_type": "document",
+    "source_id": "doc_002",
+    "title": "ポートフォリオ提出前チェック",
+    "snippet": "ポートフォリオ資料は2026-07-05までにリンク、説明文、動作確認を見直す。",
+    "relevance_score": 0.79,
+    "used_for": "todo",
+    "chunk_id": "chunk_doc_002"
+  },
+  {
+    "id": "ev_006",
+    "source_type": "calendar_mock",
+    "source_id": "calendar_002",
+    "title": "面談候補日の予定",
+    "snippet": "2026-07-05 10:00-10:30は研究室ミーティング。11:00-11:30は空き。",
+    "relevance_score": 0.91,
+    "used_for": "schedule_risk",
+    "chunk_id": "chunk_calendar_002"
   }
 ]

@@ -16,5 +16,41 @@
     "subject": "事前提出物の締切確認",
     "received_at": "2026-06-26T09:30:00",
     "body": "事前提出物の確認期限が近づいています。\n2026年7月1日までに内容を確認してください。"
+  },
+  {
+    "id": "inbox_003",
+    "channel": "email",
+    "sender_name": "ゼミ担当",
+    "sender_address": "seminar@example.com",
+    "subject": "面談日程の相談",
+    "received_at": "2026-06-26T13:10:00",
+    "body": "鈴木さん\n\n来週どこかで研究相談の面談をしたいです。\n都合のよい時間を教えてください。"
+  },
+  {
+    "id": "inbox_004",
+    "channel": "email",
+    "sender_name": "ニュースレター",
+    "sender_address": "newsletter@example.com",
+    "subject": "今週のイベント情報",
+    "received_at": "2026-06-26T18:45:00",
+    "body": "今週開催されるイベント情報をお送りします。\n参加登録や返信は不要です。"
+  },
+  {
+    "id": "inbox_005",
+    "channel": "email",
+    "sender_name": "ポートフォリオ確認担当",
+    "sender_address": "review@example.com",
+    "subject": "ポートフォリオ資料の確認依頼",
+    "received_at": "2026-06-27T08:20:00",
+    "body": "提出前にポートフォリオ資料のリンクと説明文を確認してください。\n2026年7月5日までに確認できれば問題ありません。"
+  },
+  {
+    "id": "inbox_006",
+    "channel": "email",
+    "sender_name": "LINEヤフー 採用担当",
+    "sender_address": "recruit@example.com",
+    "subject": "面談候補日の再調整",
+    "received_at": "2026-06-27T11:05:00",
+    "body": "鈴木様\n\n次回面談について、以下の候補で再調整させてください。\n- 2026年7月5日 10:00-10:30\n- 2026年7月5日 11:00-11:30\n\nご都合のよい時間をお知らせください。"
   }
 ]

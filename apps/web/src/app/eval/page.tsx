@@ -45,6 +45,8 @@ function buildMetrics(result: ActionCardEvalRunResult) {
     ["Priority match", formatRate(result.priority_match_rate)],
     ["Approval match", formatRate(result.approval_match_rate)],
     ["Missing info", formatRate(result.missing_info_match_rate)],
+    ["Generation match", formatRate(result.generation_mode_match_rate)],
+    ["Unsafe match", formatRate(result.unsafe_action_match_rate)],
     ["Evidence recall", formatRate(result.evidence_recall)],
   ];
 }
@@ -149,7 +151,7 @@ export default async function EvalPage({ searchParams }: EvalPageProps) {
         </section>
 
         <section className="mt-6 overflow-x-auto rounded-md border border-neutral-200 bg-white">
-          <table className="w-full min-w-[1120px] border-collapse text-left text-sm">
+          <table className="w-full min-w-[1240px] border-collapse text-left text-sm">
             <thead className="border-b border-neutral-200 bg-neutral-100 text-xs font-medium uppercase text-neutral-500">
               <tr>
                 <th className="px-4 py-3">Case</th>
@@ -159,6 +161,7 @@ export default async function EvalPage({ searchParams }: EvalPageProps) {
                 <th className="px-4 py-3">Actions</th>
                 <th className="px-4 py-3">Priority</th>
                 <th className="px-4 py-3">Approval</th>
+                <th className="px-4 py-3">Unsafe</th>
                 <th className="px-4 py-3">Evidence</th>
                 <th className="px-4 py-3">Workflow</th>
                 <th className="px-4 py-3">Action Card</th>
@@ -185,6 +188,12 @@ export default async function EvalPage({ searchParams }: EvalPageProps) {
                       <div className="font-medium text-neutral-950">
                         {formatGenerationMode(testCase.generation_mode)}
                       </div>
+                      {testCase.expected_generation_mode ? (
+                        <div className="mt-1 text-neutral-500">
+                          expected:{" "}
+                          {formatGenerationMode(testCase.expected_generation_mode)}
+                        </div>
+                      ) : null}
                       {testCase.fallback_reason ? (
                         <div className="mt-1 max-w-64 text-neutral-500">
                           {testCase.fallback_reason}
@@ -199,6 +208,11 @@ export default async function EvalPage({ searchParams }: EvalPageProps) {
                     </td>
                     <td className="px-4 py-3 text-neutral-700">
                       {testCase.approval_required_match ? "ok" : "mismatch"}
+                    </td>
+                    <td className="px-4 py-3 text-neutral-700">
+                      {testCase.unsafe_action_count_match
+                        ? "ok"
+                        : `${testCase.actual_unsafe_action_count}/${testCase.expected_unsafe_action_count}`}
                     </td>
                     <td className="px-4 py-3 text-neutral-700">
                       {testCase.required_evidence_covered
@@ -224,7 +238,7 @@ export default async function EvalPage({ searchParams }: EvalPageProps) {
                 <tr>
                   <td
                     className="px-4 py-6 text-sm text-neutral-500"
-                    colSpan={11}
+                    colSpan={12}
                   >
                     表示できる評価結果がありません。
                   </td>

@@ -21,6 +21,8 @@ class ActionCardEvalCase(BaseModel):
     expected_approval_required: bool | None = None
     expected_missing_info: list[str] = Field(default_factory=list)
     required_evidence_ids: list[str] = Field(default_factory=list)
+    expected_generation_mode: AgentRunGenerationMode | None = None
+    expected_unsafe_action_count: int = Field(default=0, ge=0)
 
     @model_validator(mode="after")
     def validate_expected_actions(self) -> "ActionCardEvalCase":
@@ -39,6 +41,8 @@ class ActionCardEvalCaseResult(BaseModel):
     priority_match: bool
     approval_required_match: bool
     missing_info_match: bool
+    generation_mode_match: bool
+    unsafe_action_count_match: bool
     required_evidence_covered: bool
     schema_valid: bool
     agent_steps_completed: bool
@@ -53,8 +57,11 @@ class ActionCardEvalCaseResult(BaseModel):
     required_evidence_ids: list[str]
     actual_evidence_ids: list[str]
     missing_evidence_ids: list[str]
+    expected_generation_mode: AgentRunGenerationMode | None = None
     generation_mode: AgentRunGenerationMode | None = None
     fallback_reason: str | None = None
+    expected_unsafe_action_count: int = Field(ge=0)
+    actual_unsafe_action_count: int = Field(ge=0)
     failure_reasons: list[str]
     passed: bool
 
@@ -72,6 +79,8 @@ class ActionCardEvalRunResult(BaseModel):
     priority_match_rate: float = Field(ge=0, le=1)
     approval_match_rate: float = Field(ge=0, le=1)
     missing_info_match_rate: float = Field(ge=0, le=1)
+    generation_mode_match_rate: float = Field(ge=0, le=1)
+    unsafe_action_match_rate: float = Field(ge=0, le=1)
     schema_valid_rate: float = Field(ge=0, le=1)
     evidence_recall: float = Field(ge=0, le=1)
     cases: list[ActionCardEvalCaseResult]
