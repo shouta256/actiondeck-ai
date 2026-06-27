@@ -72,6 +72,21 @@ GEMINI_API_KEY=your_api_key_here
 GEMINI_MODEL=gemini-3.1-flash-lite
 ```
 
+## Demo Flow
+
+1. `make setup` で依存関係とローカルDBを準備する
+2. `make up` でWebとAPIを起動する
+3. http://localhost:3000 を開く
+4. `action_001` の詳細を開く
+5. Source Messageで面談候補日のメールを確認する
+6. `Run agent` を押す
+7. Latest Agent Runで生成されたAction Card、Evidence、Run Traceを確認する
+8. Reviewで `Approve` / `Mark edited` / `Reject` を試す
+9. http://localhost:3000/eval を開き、deterministic評価を確認する
+10. http://localhost:3000/eval?mode=gemini でGemini評価を確認する
+
+デモシナリオは [docs/demo_scenario.md](docs/demo_scenario.md) に整理しています。
+
 ## 個別起動
 
 ### フロントエンド
