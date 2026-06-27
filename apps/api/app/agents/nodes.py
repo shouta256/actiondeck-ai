@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from app.agents.state import AgentState
+from app.agents.state import AgentRoute, AgentState
 from app.schemas import (
     ActionKind,
     AgentRunGenerationMode,
@@ -33,6 +33,7 @@ def triage(state: AgentState) -> AgentNodeResult:
         "has_schedule": has_schedule,
         "has_todo": has_todo,
     }
+    state.route = _route_for_state(state)
 
     detected_signals = [
         label
@@ -44,6 +45,7 @@ def triage(state: AgentState) -> AgentNodeResult:
         if detected_signals
         else "No urgent action signal detected."
     )
+    output = f"{output} Route: {state.route.value}."
     return AgentNodeResult(
         step_name=AgentStepName.TRIAGE,
         status=AgentStepStatus.COMPLETED,
@@ -203,6 +205,26 @@ def _score_evidence_item(state: AgentState, evidence_item: EvidenceItem) -> floa
             score += 0.2
 
     return score
+
+
+def _route_for_state(state: AgentState) -> AgentRoute:
+    action_card = state.template_action_card
+    action_set = set(action_card.actions)
+    safety_text = "\n".join(action_card.safety_notes).lower()
+
+    if "矛盾" in safety_text or "conflict" in safety_text:
+        return AgentRoute.CONFLICTING_EVIDENCE
+    if ActionKind.REQUEST_MISSING_INFO in action_set:
+        return AgentRoute.MISSING_INFO
+    if ActionKind.IGNORE in action_set:
+        return AgentRoute.IGNORE
+    if (
+        action_set == {ActionKind.CREATE_TODO}
+        and not action_card.approval_required
+        and action_card.risk_level == RiskLevel.LOW
+    ):
+        return AgentRoute.LOW_RISK_TODO
+    return AgentRoute.REVIEW_REQUIRED
 
 
 def _inbox_text(state: AgentState) -> str:

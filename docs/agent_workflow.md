@@ -30,6 +30,8 @@ Action Card
 
 現時点では軽いキーワード判定です。ここでLLMに丸投げせず、後続処理が使うシグナルを明示的に作ります。
 
+Phase 2移行前の準備として、Triageでは `route` も決めます。現時点では出力Action Cardを変えず、`missing_info`、`ignore`、`low_risk_todo`、`review_required`、`conflicting_evidence` のどれに進むべきかをTraceに残します。LangGraph移行時には、このrouteをconditional edgeへ置き換える想定です。
+
 ### Retrieval
 
 Action Cardの根拠になるEvidenceを選びます。
