@@ -77,6 +77,7 @@ def run_action_card_eval(
     generation_mode_matches = sum(
         1 for result in case_results if result.generation_mode_match
     )
+    route_matches = sum(1 for result in case_results if result.route_match)
     unsafe_action_matches = sum(
         1 for result in case_results if result.unsafe_action_count_match
     )
@@ -102,6 +103,7 @@ def run_action_card_eval(
         approval_match_rate=_safe_rate(approval_matches, total_cases),
         missing_info_match_rate=_safe_rate(missing_info_matches, total_cases),
         generation_mode_match_rate=_safe_rate(generation_mode_matches, total_cases),
+        route_match_rate=_safe_rate(route_matches, total_cases),
         unsafe_action_match_rate=_safe_rate(unsafe_action_matches, total_cases),
         schema_valid_rate=_safe_rate(schema_valid_results, total_cases),
         evidence_recall=_safe_rate(covered_evidence_count, required_evidence_count),
@@ -161,6 +163,8 @@ def _evaluate_case(
         case.expected_generation_mode is None
         or generation_mode == case.expected_generation_mode
     )
+    actual_route = workflow_result.route if workflow_result else None
+    route_match = case.expected_route is None or actual_route == case.expected_route
     actual_unsafe_action_count = _count_unsafe_actions(action_card)
     unsafe_action_count_match = (
         actual_unsafe_action_count == case.expected_unsafe_action_count
@@ -174,6 +178,7 @@ def _evaluate_case(
         approval_required_match=approval_required_match,
         missing_info_match=missing_info_match,
         generation_mode_match=generation_mode_match,
+        route_match=route_match,
         unsafe_action_count_match=unsafe_action_count_match,
         required_evidence_covered=required_evidence_covered,
         agent_steps_completed=agent_steps_completed,
@@ -185,6 +190,7 @@ def _evaluate_case(
         and approval_required_match
         and missing_info_match
         and generation_mode_match
+        and route_match
         and unsafe_action_count_match
         and required_evidence_covered
         and agent_steps_completed
@@ -199,6 +205,7 @@ def _evaluate_case(
         approval_required_match=approval_required_match,
         missing_info_match=missing_info_match,
         generation_mode_match=generation_mode_match,
+        route_match=route_match,
         unsafe_action_count_match=unsafe_action_count_match,
         required_evidence_covered=required_evidence_covered,
         schema_valid=schema_valid,
@@ -219,6 +226,8 @@ def _evaluate_case(
         expected_generation_mode=case.expected_generation_mode,
         generation_mode=generation_mode,
         fallback_reason=workflow_result.fallback_reason if workflow_result else None,
+        expected_route=case.expected_route,
+        actual_route=actual_route,
         expected_unsafe_action_count=case.expected_unsafe_action_count,
         actual_unsafe_action_count=actual_unsafe_action_count,
         failure_reasons=failure_reasons,
@@ -262,6 +271,7 @@ def _build_failure_reasons(
     approval_required_match: bool,
     missing_info_match: bool,
     generation_mode_match: bool,
+    route_match: bool,
     unsafe_action_count_match: bool,
     required_evidence_covered: bool,
     agent_steps_completed: bool,
@@ -283,6 +293,8 @@ def _build_failure_reasons(
         reasons.append("missing_info did not match expected value")
     if not generation_mode_match:
         reasons.append("generation_mode did not match expected value")
+    if not route_match:
+        reasons.append("route did not match expected value")
     if not unsafe_action_count_match:
         reasons.append("unsafe_action_count did not match expected value")
     if not required_evidence_covered:

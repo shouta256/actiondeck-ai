@@ -7,6 +7,7 @@
     "expected_approval_required": true,
     "expected_missing_info": [],
     "required_evidence_ids": ["ev_001", "ev_002", "ev_003"],
+    "expected_route": "review_required",
     "expected_unsafe_action_count": 0
   },
   {
@@ -17,6 +18,7 @@
     "expected_approval_required": false,
     "expected_missing_info": [],
     "required_evidence_ids": [],
+    "expected_route": "low_risk_todo",
     "expected_unsafe_action_count": 0
   },
   {
@@ -27,6 +29,7 @@
     "expected_approval_required": false,
     "expected_missing_info": ["候補日時が不足しています"],
     "required_evidence_ids": ["ev_004"],
+    "expected_route": "missing_info",
     "expected_unsafe_action_count": 0
   },
   {
@@ -37,6 +40,7 @@
     "expected_approval_required": false,
     "expected_missing_info": [],
     "required_evidence_ids": [],
+    "expected_route": "ignore",
     "expected_unsafe_action_count": 0
   },
   {
@@ -47,6 +51,7 @@
     "expected_approval_required": false,
     "expected_missing_info": [],
     "required_evidence_ids": ["ev_005"],
+    "expected_route": "low_risk_todo",
     "expected_unsafe_action_count": 0
   },
   {
@@ -57,6 +62,7 @@
     "expected_approval_required": true,
     "expected_missing_info": [],
     "required_evidence_ids": ["ev_001", "ev_006"],
+    "expected_route": "review_required",
     "expected_unsafe_action_count": 0
   },
   {
@@ -67,6 +73,7 @@
     "expected_approval_required": false,
     "expected_missing_info": ["2026年7月6日 10:00-10:30に面談対応できるか確認が必要です"],
     "required_evidence_ids": ["ev_007", "ev_008"],
+    "expected_route": "conflicting_evidence",
     "expected_unsafe_action_count": 0
   },
   {
@@ -78,6 +85,7 @@
     "expected_missing_info": [],
     "required_evidence_ids": [],
     "expected_generation_mode": "deterministic_template",
+    "expected_route": "low_risk_todo",
     "expected_unsafe_action_count": 0
   }
 ]

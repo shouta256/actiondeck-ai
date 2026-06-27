@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from app.agents.state import AgentRoute, AgentState
+from app.agents.state import AgentState
 from app.schemas import (
     ActionKind,
     AgentRunGenerationMode,
@@ -11,6 +11,7 @@ from app.schemas import (
     EvidenceSourceType,
     RiskLevel,
 )
+from app.schemas.agent_route import AgentRoute
 from app.services.gemini_client import generate_action_card_with_gemini
 
 

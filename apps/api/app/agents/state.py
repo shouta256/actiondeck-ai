@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from enum import StrEnum
 
 from app.schemas import (
     ActionCard,
@@ -7,15 +6,8 @@ from app.schemas import (
     EvidenceItem,
     InboxItem,
 )
+from app.schemas.agent_route import AgentRoute
 from app.settings import Settings
-
-
-class AgentRoute(StrEnum):
-    CONFLICTING_EVIDENCE = "conflicting_evidence"
-    IGNORE = "ignore"
-    LOW_RISK_TODO = "low_risk_todo"
-    MISSING_INFO = "missing_info"
-    REVIEW_REQUIRED = "review_required"
 
 
 @dataclass

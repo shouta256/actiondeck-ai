@@ -19,6 +19,7 @@ from app.schemas import (
     EvidenceItem,
     InboxItem,
 )
+from app.schemas.agent_route import AgentRoute
 from app.settings import Settings
 
 
@@ -29,6 +30,7 @@ class AgentWorkflowResult:
     evidence_items: list[EvidenceItem]
     generation_mode: AgentRunGenerationMode
     fallback_reason: str | None
+    route: AgentRoute | None
 
 
 def run_agent_workflow(
@@ -73,6 +75,7 @@ def run_agent_workflow(
         evidence_items=list(referenced_evidence_items),
         generation_mode=state.generation_mode,
         fallback_reason=state.fallback_reason,
+        route=state.route,
     )
 
 

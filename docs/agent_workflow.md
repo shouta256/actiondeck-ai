@@ -67,6 +67,8 @@ Gemini APIを使ってAction Card JSONを生成します。
 
 Geminiを毎回呼ぶ評価は出力が揺れやすく、CIにも向きません。そのためMVPでは、`GEMINI_API_KEY` を使わない設定でworkflowを動かし、Action Cardのactions、priority、approval_required、missing_info、required evidence、schema validation、各stepの完了状態を確認します。
 
+Phase 2では、LangGraph移行前に `route` も評価対象にします。これにより、既存workflow上で `missing_info`、`ignore`、`low_risk_todo`、`review_required`、`conflicting_evidence` の分岐意図が守られているかを確認できます。
+
 ## 実装ファイル
 
 - `apps/api/app/agents/state.py`: workflow中に持ち回る状態

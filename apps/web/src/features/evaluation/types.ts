@@ -5,6 +5,12 @@ import type {
 } from "@/features/action-cards/types";
 
 export type ActionCardEvalMode = "deterministic" | "gemini";
+export type AgentRoute =
+  | "conflicting_evidence"
+  | "ignore"
+  | "low_risk_todo"
+  | "missing_info"
+  | "review_required";
 
 export type ActionCardEvalCaseResult = {
   id: string;
@@ -15,6 +21,7 @@ export type ActionCardEvalCaseResult = {
   approval_required_match: boolean;
   missing_info_match: boolean;
   generation_mode_match: boolean;
+  route_match: boolean;
   unsafe_action_count_match: boolean;
   required_evidence_covered: boolean;
   schema_valid: boolean;
@@ -33,6 +40,8 @@ export type ActionCardEvalCaseResult = {
   expected_generation_mode?: "deterministic_template" | "gemini_assisted" | null;
   generation_mode?: "deterministic_template" | "gemini_assisted" | null;
   fallback_reason?: string | null;
+  expected_route?: AgentRoute | null;
+  actual_route?: AgentRoute | null;
   expected_unsafe_action_count: number;
   actual_unsafe_action_count: number;
   failure_reasons: string[];
@@ -51,6 +60,7 @@ export type ActionCardEvalRunResult = {
   approval_match_rate: number;
   missing_info_match_rate: number;
   generation_mode_match_rate: number;
+  route_match_rate: number;
   unsafe_action_match_rate: number;
   schema_valid_rate: number;
   evidence_recall: number;
