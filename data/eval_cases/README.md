@@ -10,6 +10,6 @@ Phase 2ではまず10〜12件を目標に、成功系だけでなく以下を評
 - Low risk ToDo
 - Ignore / archive
 - Conflicting evidence
-- Gemini fallback
+- Gemini fallback (deterministic modeでfallback経路を確認)
 
-最初の拡張では6件まで増やし、LangGraph移行前に分岐と安全性を評価できる土台を作ります。
+最初の拡張では8件まで増やし、LangGraph移行前に分岐、根拠矛盾、安全性、fallbackを評価できる土台を作ります。
