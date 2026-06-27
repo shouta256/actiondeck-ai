@@ -4,28 +4,46 @@ import type {
   Priority,
 } from "@/features/action-cards/types";
 
+export type ActionCardEvalMode = "deterministic" | "gemini";
+
 export type ActionCardEvalCaseResult = {
   id: string;
   input_item_id: string;
   actual_action_card_id?: string | null;
   actions_match: boolean;
   priority_match: boolean;
+  approval_required_match: boolean;
+  missing_info_match: boolean;
   required_evidence_covered: boolean;
+  schema_valid: boolean;
+  agent_steps_completed: boolean;
   expected_actions: ActionKind[];
   actual_actions: ActionKind[];
   expected_priority: Priority;
   actual_priority?: Priority | null;
+  expected_approval_required?: boolean | null;
+  actual_approval_required?: boolean | null;
+  expected_missing_info: string[];
+  actual_missing_info: string[];
   required_evidence_ids: string[];
   actual_evidence_ids: string[];
   missing_evidence_ids: string[];
+  generation_mode?: "deterministic_template" | "gemini_assisted" | null;
+  fallback_reason?: string | null;
+  failure_reasons: string[];
   passed: boolean;
 };
 
 export type ActionCardEvalRunResult = {
+  mode: ActionCardEvalMode;
+  llm_configured: boolean;
   total_cases: number;
   passed_cases: number;
   action_match_rate: number;
   priority_match_rate: number;
+  approval_match_rate: number;
+  missing_info_match_rate: number;
+  schema_valid_rate: number;
   evidence_recall: number;
   cases: ActionCardEvalCaseResult[];
 };

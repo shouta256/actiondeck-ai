@@ -41,11 +41,11 @@ LangGraphとpgvectorは今後の拡張候補です。MVPでは、処理の境界
 - Agent RunはGemini生成とdeterministic fallbackを実装済み
 - Agent Run結果はPostgreSQLに保存する。接続できない場合は開発用にメモリ保存へfallbackする
 - WebではAction Card詳細、Evidence、Trace、Review、Agent Run結果を表示する
-- Evaluation画面で評価ケースの結果を表示する
+- Evaluation画面でAgent Workflowをdeterministic modeで実行し、評価ケースの期待値と比較する
 
 ## 今後の拡張候補
 
 - seed evidence検索をpgvector検索に置き換える
 - Python workflowをLangGraphに置き換える
 - Calendar読み取りなど、外部連携を1本だけ追加する
-- Evaluationを実際のAgent Run workflowに接続し、改善サイクルを強くする
+- Geminiあり評価を手動実行用に分け、deterministic評価と比較する

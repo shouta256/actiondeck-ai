@@ -57,6 +57,12 @@ Gemini APIを使ってAction Card JSONを生成します。
 - Gemini生成かfallbackか
 - Safety Checkで何を確認したか
 
+## Evaluation
+
+評価APIでは、評価ケースごとにAgent Workflowをdeterministic modeで実行します。
+
+Geminiを毎回呼ぶ評価は出力が揺れやすく、CIにも向きません。そのためMVPでは、`GEMINI_API_KEY` を使わない設定でworkflowを動かし、Action Cardのactions、priority、approval_required、missing_info、required evidence、schema validation、各stepの完了状態を確認します。
+
 ## 実装ファイル
 
 - `apps/api/app/agents/state.py`: workflow中に持ち回る状態

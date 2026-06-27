@@ -2,9 +2,19 @@ import json
 from functools import lru_cache
 from pathlib import Path
 
-from app.schemas import ActionCard, ActionCardEvalCase, ActionCardEvalRunResult
+from app.agents import AgentWorkflowResult, run_agent_workflow
+from app.schemas import (
+    ActionCard,
+    ActionCardEvalCase,
+    ActionCardEvalMode,
+    ActionCardEvalRunResult,
+)
+from app.schemas.agent_trace import AgentStepStatus
 from app.schemas.evaluation import ActionCardEvalCaseResult
 from app.services.action_card_store import list_action_cards
+from app.services.evidence_store import list_evidence_items
+from app.services.inbox_item_store import get_inbox_item
+from app.settings import get_settings
 
 
 ACTION_CARD_EVAL_CASES_PATH = (
@@ -21,13 +31,22 @@ def list_action_card_eval_cases() -> tuple[ActionCardEvalCase, ...]:
     return tuple(ActionCardEvalCase.model_validate(raw_case) for raw_case in raw_cases)
 
 
-def run_action_card_eval() -> ActionCardEvalRunResult:
+def run_action_card_eval(
+    mode: ActionCardEvalMode = ActionCardEvalMode.DETERMINISTIC,
+) -> ActionCardEvalRunResult:
     cases = list_action_card_eval_cases()
-    action_cards_by_source = {
+    template_action_cards_by_source = {
         card.source_item_id: card for card in list_action_cards()
     }
+    settings = _settings_for_eval_mode(mode)
     case_results = tuple(
-        _evaluate_case(case, action_cards_by_source.get(case.input_item_id))
+        _evaluate_case(
+            case=case,
+            template_action_card=template_action_cards_by_source.get(
+                case.input_item_id
+            ),
+            settings=settings,
+        )
         for case in cases
     )
 
@@ -35,6 +54,13 @@ def run_action_card_eval() -> ActionCardEvalRunResult:
     passed_cases = sum(1 for result in case_results if result.passed)
     action_matches = sum(1 for result in case_results if result.actions_match)
     priority_matches = sum(1 for result in case_results if result.priority_match)
+    approval_matches = sum(
+        1 for result in case_results if result.approval_required_match
+    )
+    missing_info_matches = sum(
+        1 for result in case_results if result.missing_info_match
+    )
+    schema_valid_results = sum(1 for result in case_results if result.schema_valid)
 
     required_evidence_count = sum(
         len(result.required_evidence_ids) for result in case_results
@@ -45,21 +71,47 @@ def run_action_card_eval() -> ActionCardEvalRunResult:
     covered_evidence_count = required_evidence_count - missing_evidence_count
 
     return ActionCardEvalRunResult(
+        mode=mode,
+        llm_configured=bool(settings.gemini_api_key),
         total_cases=total_cases,
         passed_cases=passed_cases,
         action_match_rate=_safe_rate(action_matches, total_cases),
         priority_match_rate=_safe_rate(priority_matches, total_cases),
+        approval_match_rate=_safe_rate(approval_matches, total_cases),
+        missing_info_match_rate=_safe_rate(missing_info_matches, total_cases),
+        schema_valid_rate=_safe_rate(schema_valid_results, total_cases),
         evidence_recall=_safe_rate(covered_evidence_count, required_evidence_count),
         cases=list(case_results),
     )
 
 
+def _settings_for_eval_mode(mode: ActionCardEvalMode):
+    settings = get_settings()
+    if mode == ActionCardEvalMode.DETERMINISTIC:
+        return settings.model_copy(update={"gemini_api_key": None})
+    return settings
+
+
 def _evaluate_case(
     case: ActionCardEvalCase,
-    action_card: ActionCard | None,
+    template_action_card: ActionCard | None,
+    settings,
 ) -> ActionCardEvalCaseResult:
+    inbox_item = get_inbox_item(case.input_item_id)
+    workflow_result = (
+        run_agent_workflow(
+            inbox_item=inbox_item,
+            template_action_card=template_action_card,
+            evidence_items=list_evidence_items(),
+            settings=settings,
+        )
+        if inbox_item and template_action_card
+        else None
+    )
+    action_card = workflow_result.action_card if workflow_result else None
     actual_actions = action_card.actions if action_card else []
     actual_evidence_ids = action_card.evidence_ids if action_card else []
+    actual_missing_info = action_card.missing_info if action_card else []
     missing_evidence_ids = [
         evidence_id
         for evidence_id in case.required_evidence_ids
@@ -69,7 +121,37 @@ def _evaluate_case(
     priority_match = (
         action_card is not None and action_card.priority == case.expected_priority
     )
+    approval_required_match = (
+        case.expected_approval_required is None
+        or (
+            action_card is not None
+            and action_card.approval_required == case.expected_approval_required
+        )
+    )
+    missing_info_match = set(actual_missing_info) == set(case.expected_missing_info)
     required_evidence_covered = len(missing_evidence_ids) == 0
+    schema_valid = action_card is not None
+    agent_steps_completed = _agent_steps_completed(workflow_result)
+    failure_reasons = _build_failure_reasons(
+        inbox_item_exists=inbox_item is not None,
+        template_exists=template_action_card is not None,
+        schema_valid=schema_valid,
+        actions_match=actions_match,
+        priority_match=priority_match,
+        approval_required_match=approval_required_match,
+        missing_info_match=missing_info_match,
+        required_evidence_covered=required_evidence_covered,
+        agent_steps_completed=agent_steps_completed,
+    )
+    passed = (
+        schema_valid
+        and actions_match
+        and priority_match
+        and approval_required_match
+        and missing_info_match
+        and required_evidence_covered
+        and agent_steps_completed
+    )
 
     return ActionCardEvalCaseResult(
         id=case.id,
@@ -77,16 +159,70 @@ def _evaluate_case(
         actual_action_card_id=action_card.id if action_card else None,
         actions_match=actions_match,
         priority_match=priority_match,
+        approval_required_match=approval_required_match,
+        missing_info_match=missing_info_match,
         required_evidence_covered=required_evidence_covered,
+        schema_valid=schema_valid,
+        agent_steps_completed=agent_steps_completed,
         expected_actions=case.expected_actions,
         actual_actions=actual_actions,
         expected_priority=case.expected_priority,
         actual_priority=action_card.priority if action_card else None,
+        expected_approval_required=case.expected_approval_required,
+        actual_approval_required=(
+            action_card.approval_required if action_card else None
+        ),
+        expected_missing_info=case.expected_missing_info,
+        actual_missing_info=actual_missing_info,
         required_evidence_ids=case.required_evidence_ids,
         actual_evidence_ids=actual_evidence_ids,
         missing_evidence_ids=missing_evidence_ids,
-        passed=actions_match and priority_match and required_evidence_covered,
+        generation_mode=workflow_result.generation_mode if workflow_result else None,
+        fallback_reason=workflow_result.fallback_reason if workflow_result else None,
+        failure_reasons=failure_reasons,
+        passed=passed,
     )
+
+
+def _agent_steps_completed(workflow_result: AgentWorkflowResult | None) -> bool:
+    return workflow_result is not None and all(
+        step.status == AgentStepStatus.COMPLETED
+        for step in workflow_result.agent_steps
+    )
+
+
+def _build_failure_reasons(
+    *,
+    inbox_item_exists: bool,
+    template_exists: bool,
+    schema_valid: bool,
+    actions_match: bool,
+    priority_match: bool,
+    approval_required_match: bool,
+    missing_info_match: bool,
+    required_evidence_covered: bool,
+    agent_steps_completed: bool,
+) -> list[str]:
+    reasons = []
+    if not inbox_item_exists:
+        reasons.append("input inbox item was not found")
+    if not template_exists:
+        reasons.append("template action card was not found")
+    if not schema_valid:
+        reasons.append("workflow did not return a valid Action Card")
+    if not actions_match:
+        reasons.append("actions did not match expected actions")
+    if not priority_match:
+        reasons.append("priority did not match expected priority")
+    if not approval_required_match:
+        reasons.append("approval_required did not match expected value")
+    if not missing_info_match:
+        reasons.append("missing_info did not match expected value")
+    if not required_evidence_covered:
+        reasons.append("required evidence was not covered")
+    if not agent_steps_completed:
+        reasons.append("one or more workflow steps did not complete")
+    return reasons
 
 
 def _safe_rate(numerator: int, denominator: int) -> float:

@@ -25,6 +25,7 @@ from app.schemas.action_card import (
 from app.schemas.evidence import EvidenceItem, EvidenceSourceType
 from app.schemas.evaluation import (
     ActionCardEvalCase,
+    ActionCardEvalMode,
     ActionCardEvalCaseResult,
     ActionCardEvalRunResult,
 )
@@ -37,6 +38,7 @@ __all__ = [
     "ActionCardStatus",
     "ActionCardStatusUpdate",
     "ActionCardEvalCase",
+    "ActionCardEvalMode",
     "ActionCardEvalCaseResult",
     "ActionCardEvalRunResult",
     "ActionKind",

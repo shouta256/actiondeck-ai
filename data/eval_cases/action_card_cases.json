@@ -4,6 +4,8 @@
     "input_item_id": "inbox_001",
     "expected_actions": ["draft_reply", "propose_schedule", "create_todo"],
     "expected_priority": "high",
+    "expected_approval_required": true,
+    "expected_missing_info": [],
     "required_evidence_ids": ["ev_001", "ev_002", "ev_003"]
   },
   {
@@ -11,6 +13,8 @@
     "input_item_id": "inbox_002",
     "expected_actions": ["create_todo"],
     "expected_priority": "medium",
+    "expected_approval_required": false,
+    "expected_missing_info": [],
     "required_evidence_ids": []
   }
 ]
