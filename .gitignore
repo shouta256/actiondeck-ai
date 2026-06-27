@@ -20,6 +20,11 @@ coverage/
 .DS_Store
 *.log
 
+# 内部メモ
+docs/handoff.md
+docs/next_phase_strategy_brief.md
+docs/phase2_strategy_for_selection.md
+
 # データベース
 *.sqlite
 *.sqlite3

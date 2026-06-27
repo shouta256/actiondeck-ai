@@ -2,7 +2,9 @@
 
 Agent Workflowは、Inbox ItemからAction Cardを生成する処理です。
 
-MVPではLangGraphをまだ使わず、`apps/api/app/agents` に小さなPython workflowとして実装しています。理由は、まずAgentの責務境界を明確にし、画面・DB・評価までつながる縦スライスを完成させるためです。
+MVP時点ではLangGraphは未使用で、`apps/api/app/agents` に小さなPython workflowとして実装しています。理由は、まずAgentの責務境界を明確にし、画面・DB・評価までつながる縦スライスを完成させるためです。
+
+Phase 2では、この線形workflowをLangGraphへ移行する予定です。単純置換ではなく、conditional edge (情報不足 / 低リスク / 高リスク)、fallback、approval gate、trace保持までを設計に含めます。
 
 ## 流れ
 
@@ -32,7 +34,7 @@ Action Card
 
 Action Cardの根拠になるEvidenceを選びます。
 
-MVPでは `data/seed/evidence_items.json` のseed evidenceに対して簡易スコアリングを行います。将来的にはここをpgvector検索へ置き換える想定です。
+MVPでは `data/seed/evidence_items.json` のseed evidenceに対して簡易スコアリングを行います。Phase 2では、ここをpgvectorによるtop-k検索へ置き換え (lexical fallbackは残す)、複数ソース (calendar / user_rules / prior_messages / documents) を横断する想定です。required evidence hit rate などの指標で検索品質を評価します。
 
 ### Planning
 
