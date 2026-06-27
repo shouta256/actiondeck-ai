@@ -87,6 +87,8 @@ GEMINI_MODEL=gemini-3.1-flash-lite
 
 デモシナリオは [docs/demo_scenario.md](docs/demo_scenario.md) に整理しています。
 
+開発の引き継ぎメモは [docs/handoff.md](docs/handoff.md) に整理しています。
+
 ## 個別起動
 
 ### フロントエンド
