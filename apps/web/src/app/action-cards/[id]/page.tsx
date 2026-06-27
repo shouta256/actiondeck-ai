@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 import { listActionCardAgentSteps } from "@/features/agent-trace/api";
 import type { AgentTraceStep } from "@/features/agent-trace/types";
-import { RunAgentButton } from "@/features/agent-runs/run-agent-button";
+import { AgentRunPanel } from "@/features/agent-runs/agent-run-panel";
 import { getActionCard } from "@/features/action-cards/api";
 import { ReviewActions } from "@/features/action-cards/review-actions";
 import type { ActionCard } from "@/features/action-cards/types";
@@ -77,7 +77,7 @@ function SourceMessagePanel({ item }: { item: InboxItem | null }) {
             </span>
           </div>
           <div className="mt-4">
-            <RunAgentButton inboxItemId={item.id} />
+            <AgentRunPanel inboxItemId={item.id} />
           </div>
           <p className="mt-4 text-base font-semibold text-neutral-950">
             {item.subject}

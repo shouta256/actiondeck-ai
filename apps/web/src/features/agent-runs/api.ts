@@ -27,3 +27,25 @@ export async function createAgentRun(
 
   return response.json();
 }
+
+export async function listAgentRuns(
+  inboxItemId?: string,
+): Promise<AgentRunResult[]> {
+  const searchParams = new URLSearchParams();
+  if (inboxItemId) {
+    searchParams.set("inbox_item_id", inboxItemId);
+  }
+  const query = searchParams.toString();
+  const response = await fetch(
+    `${getApiBaseUrl()}/agent-runs${query ? `?${query}` : ""}`,
+    {
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch agent runs: ${response.status}`);
+  }
+
+  return response.json();
+}

@@ -12,6 +12,14 @@ ActionDeck AIのバックエンドです。
 npm run dev:api
 ```
 
+ローカルDBを使う場合は、先にPostgresを起動します。
+
+```bash
+npm run start:db
+```
+
+`agent_runs` はPostgresの `agent_runs` テーブルに保存されます。Postgresに接続できない場合、開発中に画面が壊れないよう一時的にメモリ保存へfallbackします。
+
 ## 確認
 
 ```bash

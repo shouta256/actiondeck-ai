@@ -7,7 +7,13 @@ import { Button } from "@/components/ui/button";
 import { createAgentRun } from "./api";
 import type { AgentRunResult } from "./types";
 
-export function RunAgentButton({ inboxItemId }: { inboxItemId: string }) {
+export function RunAgentButton({
+  inboxItemId,
+  onRunCreated,
+}: {
+  inboxItemId: string;
+  onRunCreated?: (agentRun: AgentRunResult) => void;
+}) {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<AgentRunResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -19,6 +25,7 @@ export function RunAgentButton({ inboxItemId }: { inboxItemId: string }) {
       try {
         const nextResult = await createAgentRun(inboxItemId);
         setResult(nextResult);
+        onRunCreated?.(nextResult);
       } catch {
         setErrorMessage("Agent run failed.");
       }
