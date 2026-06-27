@@ -5,6 +5,11 @@ from app.schemas.agent_trace import (
     AgentToolCall,
     AgentTraceStep,
 )
+from app.schemas.agent_run import (
+    AgentRunGenerationMode,
+    AgentRunRequest,
+    AgentRunResult,
+)
 from app.schemas.action_card import (
     ActionCard,
     ActionCardReviewStatus,
@@ -37,6 +42,9 @@ __all__ = [
     "ActionKind",
     "ActionProposal",
     "AgentStepName",
+    "AgentRunGenerationMode",
+    "AgentRunRequest",
+    "AgentRunResult",
     "AgentStepStatus",
     "AgentTokenUsage",
     "AgentToolCall",

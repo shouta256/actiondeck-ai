@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { listActionCardAgentSteps } from "@/features/agent-trace/api";
 import type { AgentTraceStep } from "@/features/agent-trace/types";
+import { RunAgentButton } from "@/features/agent-runs/run-agent-button";
 import { getActionCard } from "@/features/action-cards/api";
 import { ReviewActions } from "@/features/action-cards/review-actions";
 import type { ActionCard } from "@/features/action-cards/types";
@@ -74,6 +75,9 @@ function SourceMessagePanel({ item }: { item: InboxItem | null }) {
             <span className="font-mono text-xs text-neutral-500">
               {formatDateTime(item.received_at)}
             </span>
+          </div>
+          <div className="mt-4">
+            <RunAgentButton inboxItemId={item.id} />
           </div>
           <p className="mt-4 text-base font-semibold text-neutral-950">
             {item.subject}
