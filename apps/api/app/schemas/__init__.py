@@ -18,6 +18,7 @@ from app.schemas.action_card import (
     TodoProposal,
 )
 from app.schemas.evidence import EvidenceItem, EvidenceSourceType
+from app.schemas.inbox_item import InboxChannel, InboxItem
 from app.schemas.review_event import ReviewActor, ReviewEvent
 
 __all__ = [
@@ -35,6 +36,8 @@ __all__ = [
     "CalendarEventProposal",
     "EvidenceItem",
     "EvidenceSourceType",
+    "InboxChannel",
+    "InboxItem",
     "Priority",
     "ReviewActor",
     "ReviewEvent",

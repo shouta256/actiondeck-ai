@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.routes.action_cards import router as action_cards_router
+from app.routes.inbox_items import router as inbox_items_router
 
 app = FastAPI(
     title="ActionDeck AI API",
@@ -10,6 +11,7 @@ app = FastAPI(
 )
 
 app.include_router(action_cards_router)
+app.include_router(inbox_items_router)
 
 app.add_middleware(
     CORSMiddleware,

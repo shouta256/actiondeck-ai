@@ -8,6 +8,8 @@ import { ReviewActions } from "@/features/action-cards/review-actions";
 import type { ActionCard } from "@/features/action-cards/types";
 import { listActionCardEvidence } from "@/features/evidence/api";
 import type { EvidenceItem } from "@/features/evidence/types";
+import { getInboxItem } from "@/features/inbox-items/api";
+import type { InboxItem } from "@/features/inbox-items/types";
 import { listActionCardReviewEvents } from "@/features/review-events/api";
 import type { ReviewEvent } from "@/features/review-events/types";
 
@@ -53,6 +55,38 @@ function Section({
 
 function EmptyText({ children }: { children: React.ReactNode }) {
   return <p className="text-sm text-neutral-500">{children}</p>;
+}
+
+function SourceMessagePanel({ item }: { item: InboxItem | null }) {
+  return (
+    <Section title="Source Message">
+      {item ? (
+        <div>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium text-neutral-950">
+                {item.sender_name}
+              </p>
+              <p className="mt-1 text-xs text-neutral-500">
+                {item.sender_address ?? item.channel}
+              </p>
+            </div>
+            <span className="font-mono text-xs text-neutral-500">
+              {formatDateTime(item.received_at)}
+            </span>
+          </div>
+          <p className="mt-4 text-base font-semibold text-neutral-950">
+            {item.subject}
+          </p>
+          <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-neutral-700">
+            {item.body}
+          </p>
+        </div>
+      ) : (
+        <EmptyText>元メッセージを表示できません。</EmptyText>
+      )}
+    </Section>
+  );
 }
 
 function ProposalPanel({ card }: { card: ActionCard }) {
@@ -309,16 +343,18 @@ function ReviewPanel({
 
 export default async function ActionCardDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const [card, evidenceItems, agentSteps, reviewEvents] = await Promise.all([
-    getActionCard(id),
-    listActionCardEvidence(id),
-    listActionCardAgentSteps(id),
-    listActionCardReviewEvents(id),
-  ]);
+  const card = await getActionCard(id);
 
   if (!card) {
     notFound();
   }
+
+  const [sourceItem, evidenceItems, agentSteps, reviewEvents] = await Promise.all([
+    getInboxItem(card.source_item_id),
+    listActionCardEvidence(id),
+    listActionCardAgentSteps(id),
+    listActionCardReviewEvents(id),
+  ]);
 
   return (
     <main className="min-h-screen bg-neutral-50 text-neutral-950">
@@ -344,6 +380,7 @@ export default async function ActionCardDetailPage({ params }: PageProps) {
 
         <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
           <div className="space-y-4">
+            <SourceMessagePanel item={sourceItem} />
             <ProposalPanel card={card} />
             <AgentTracePanel steps={agentSteps} />
           </div>
