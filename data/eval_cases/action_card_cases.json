@@ -1,0 +1,16 @@
+[
+  {
+    "id": "eval_001",
+    "input_item_id": "inbox_001",
+    "expected_actions": ["draft_reply", "propose_schedule", "create_todo"],
+    "expected_priority": "high",
+    "required_evidence_ids": ["ev_001", "ev_002", "ev_003"]
+  },
+  {
+    "id": "eval_002",
+    "input_item_id": "inbox_002",
+    "expected_actions": ["create_todo"],
+    "expected_priority": "medium",
+    "required_evidence_ids": []
+  }
+]

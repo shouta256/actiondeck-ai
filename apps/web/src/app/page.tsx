@@ -51,7 +51,9 @@ export default async function Home() {
               Personal Action Review Agent
             </span>
           </div>
-          <div className="text-sm text-neutral-500">MVP setup</div>
+          <Link className="text-sm text-neutral-500 hover:text-neutral-950" href="/eval">
+            Evaluation
+          </Link>
         </div>
       </header>
 
