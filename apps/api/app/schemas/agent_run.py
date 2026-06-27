@@ -10,6 +10,7 @@ from app.schemas.evidence import EvidenceItem
 
 class AgentRunGenerationMode(StrEnum):
     DETERMINISTIC_TEMPLATE = "deterministic_template"
+    GEMINI_ASSISTED = "gemini_assisted"
 
 
 class AgentRunRequest(BaseModel):
@@ -30,4 +31,5 @@ class AgentRunResult(BaseModel):
     llm_model: str = Field(min_length=1)
     llm_configured: bool
     generation_mode: AgentRunGenerationMode
+    fallback_reason: str | None = None
     created_at: datetime
