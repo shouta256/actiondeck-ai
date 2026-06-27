@@ -37,6 +37,8 @@ export type ActionCardEvalCaseResult = {
 export type ActionCardEvalRunResult = {
   mode: ActionCardEvalMode;
   llm_configured: boolean;
+  gemini_assisted_cases: number;
+  deterministic_template_cases: number;
   total_cases: number;
   passed_cases: number;
   action_match_rate: number;

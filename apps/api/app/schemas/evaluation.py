@@ -64,6 +64,8 @@ class ActionCardEvalRunResult(BaseModel):
 
     mode: ActionCardEvalMode
     llm_configured: bool
+    gemini_assisted_cases: int = Field(ge=0)
+    deterministic_template_cases: int = Field(ge=0)
     total_cases: int = Field(ge=0)
     passed_cases: int = Field(ge=0)
     action_match_rate: float = Field(ge=0, le=1)

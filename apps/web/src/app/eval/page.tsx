@@ -16,10 +16,28 @@ function formatRate(value: number) {
   return value.toFixed(2);
 }
 
+function formatBoolean(value: boolean) {
+  return value ? "yes" : "no";
+}
+
+function formatGenerationMode(
+  mode: ActionCardEvalRunResult["cases"][number]["generation_mode"],
+) {
+  if (mode === "gemini_assisted") {
+    return "Gemini";
+  }
+  if (mode === "deterministic_template") {
+    return "Template fallback";
+  }
+  return "-";
+}
+
 function buildMetrics(result: ActionCardEvalRunResult) {
   return [
     ["Mode", result.mode],
-    ["LLM configured", String(result.llm_configured)],
+    ["LLM configured", formatBoolean(result.llm_configured)],
+    ["Gemini used", String(result.gemini_assisted_cases)],
+    ["Template fallback", String(result.deterministic_template_cases)],
     ["Total cases", String(result.total_cases)],
     ["Passed cases", String(result.passed_cases)],
     ["Schema valid", formatRate(result.schema_valid_rate)],
@@ -101,7 +119,7 @@ export default async function EvalPage({ searchParams }: EvalPageProps) {
           </div>
           {mode === "gemini" ? (
             <p className="mt-2 text-xs text-neutral-500">
-              Gemini modeは手動確認用です。APIキーが未設定の場合はtemplate fallbackで評価します。
+              Gemini modeは手動確認用です。APIキーが未設定、またはGemini生成に失敗した場合はtemplate fallbackで評価します。
             </p>
           ) : (
             <p className="mt-2 text-xs text-neutral-500">
@@ -137,7 +155,7 @@ export default async function EvalPage({ searchParams }: EvalPageProps) {
                 <th className="px-4 py-3">Case</th>
                 <th className="px-4 py-3">Input</th>
                 <th className="px-4 py-3">Result</th>
-                <th className="px-4 py-3">Mode</th>
+                <th className="px-4 py-3">Generation</th>
                 <th className="px-4 py-3">Actions</th>
                 <th className="px-4 py-3">Priority</th>
                 <th className="px-4 py-3">Approval</th>
@@ -163,8 +181,15 @@ export default async function EvalPage({ searchParams }: EvalPageProps) {
                     <td className="px-4 py-3 font-mono text-xs">
                       {testCase.passed ? "pass" : "fail"}
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-neutral-700">
-                      {testCase.generation_mode ?? "-"}
+                    <td className="px-4 py-3 text-xs text-neutral-700">
+                      <div className="font-medium text-neutral-950">
+                        {formatGenerationMode(testCase.generation_mode)}
+                      </div>
+                      {testCase.fallback_reason ? (
+                        <div className="mt-1 max-w-64 text-neutral-500">
+                          {testCase.fallback_reason}
+                        </div>
+                      ) : null}
                     </td>
                     <td className="px-4 py-3 text-neutral-700">
                       {testCase.actions_match ? "ok" : "mismatch"}

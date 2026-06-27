@@ -8,6 +8,7 @@ from app.schemas import (
     ActionCardEvalCase,
     ActionCardEvalMode,
     ActionCardEvalRunResult,
+    AgentRunGenerationMode,
 )
 from app.schemas.agent_trace import AgentStepStatus
 from app.schemas.evaluation import ActionCardEvalCaseResult
@@ -52,6 +53,16 @@ def run_action_card_eval(
 
     total_cases = len(case_results)
     passed_cases = sum(1 for result in case_results if result.passed)
+    gemini_assisted_cases = sum(
+        1
+        for result in case_results
+        if result.generation_mode == AgentRunGenerationMode.GEMINI_ASSISTED
+    )
+    deterministic_template_cases = sum(
+        1
+        for result in case_results
+        if result.generation_mode == AgentRunGenerationMode.DETERMINISTIC_TEMPLATE
+    )
     action_matches = sum(1 for result in case_results if result.actions_match)
     priority_matches = sum(1 for result in case_results if result.priority_match)
     approval_matches = sum(
@@ -73,6 +84,8 @@ def run_action_card_eval(
     return ActionCardEvalRunResult(
         mode=mode,
         llm_configured=bool(settings.gemini_api_key),
+        gemini_assisted_cases=gemini_assisted_cases,
+        deterministic_template_cases=deterministic_template_cases,
         total_cases=total_cases,
         passed_cases=passed_cases,
         action_match_rate=_safe_rate(action_matches, total_cases),
