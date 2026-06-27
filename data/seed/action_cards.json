@@ -135,5 +135,22 @@
     "evidence_ids": ["ev_001", "ev_006"],
     "missing_info": [],
     "safety_notes": ["10:00の候補は既存予定と衝突します", "メール返信と予定作成はユーザー承認が必要です"]
+  },
+  {
+    "schema_version": "1.0",
+    "id": "action_007",
+    "source_item_id": "inbox_007",
+    "title": "矛盾した予定根拠の確認",
+    "actions": ["request_missing_info"],
+    "priority": "high",
+    "risk_level": "medium",
+    "confidence": 0.68,
+    "approval_required": false,
+    "status": "draft",
+    "summary": "カレンダー上は空きだが、個人メモでは移動予定があるため、面談可否を確定せず追加確認する。",
+    "proposal": {},
+    "evidence_ids": ["ev_007", "ev_008"],
+    "missing_info": ["2026年7月6日 10:00-10:30に面談対応できるか確認が必要です"],
+    "safety_notes": ["根拠が矛盾しているため、返信案や予定案を確定しません"]
   }
 ]

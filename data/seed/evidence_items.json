@@ -58,5 +58,25 @@
     "relevance_score": 0.91,
     "used_for": "schedule_risk",
     "chunk_id": "chunk_calendar_002"
+  },
+  {
+    "id": "ev_007",
+    "source_type": "calendar_mock",
+    "source_id": "calendar_003",
+    "title": "7月6日のカレンダー",
+    "snippet": "2026-07-06 10:00-10:30はカレンダー上は空き。",
+    "relevance_score": 0.84,
+    "used_for": "schedule_risk",
+    "chunk_id": "chunk_calendar_003"
+  },
+  {
+    "id": "ev_008",
+    "source_type": "personal_note",
+    "source_id": "note_003",
+    "title": "7月6日午前の移動メモ",
+    "snippet": "2026-07-06午前は移動予定があり、オンライン面談は避ける。",
+    "relevance_score": 0.89,
+    "used_for": "schedule_risk",
+    "chunk_id": "chunk_note_003"
   }
 ]
