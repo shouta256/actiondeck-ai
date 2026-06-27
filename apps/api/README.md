@@ -2,20 +2,22 @@
 
 ActionDeck AIのバックエンドです。
 
-現時点では、開発環境の疎通確認用に最小のFastAPIアプリだけを用意しています。
+FastAPIでAction Card、Evidence、Agent Trace、Review Event、Agent Run、Evaluationを扱います。
+
+Agent Runでは `Triage -> Retrieval -> Planning -> Safety` のPython workflowを実行し、GeminiでAction Card JSONを生成します。Geminiが使えない場合やschema検証に失敗した場合は、deterministicなテンプレートにfallbackします。
 
 ## 起動
 
 リポジトリルートから実行します。
 
 ```bash
-npm run dev:api
+make api
 ```
 
 ローカルDBを使う場合は、先にPostgresを起動します。
 
 ```bash
-npm run start:db
+make db-up
 ```
 
 `agent_runs` はPostgresの `agent_runs` テーブルに保存されます。Postgresに接続できない場合、開発中に画面が壊れないよう一時的にメモリ保存へfallbackします。
