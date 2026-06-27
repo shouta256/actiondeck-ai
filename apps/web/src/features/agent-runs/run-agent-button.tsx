@@ -15,7 +15,6 @@ export function RunAgentButton({
   onRunCreated?: (agentRun: AgentRunResult) => void;
 }) {
   const [isPending, startTransition] = useTransition();
-  const [result, setResult] = useState<AgentRunResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   function handleRunAgent() {
@@ -24,7 +23,6 @@ export function RunAgentButton({
     startTransition(async () => {
       try {
         const nextResult = await createAgentRun(inboxItemId);
-        setResult(nextResult);
         onRunCreated?.(nextResult);
       } catch {
         setErrorMessage("Agent run failed.");
@@ -44,16 +42,6 @@ export function RunAgentButton({
         {isPending ? "Running" : "Run agent"}
       </Button>
 
-      {result ? (
-        <div className="space-y-1">
-          <p className="font-mono text-xs text-neutral-500">
-            {result.run_id} / {result.generation_mode}
-          </p>
-          {result.fallback_reason ? (
-            <p className="text-xs text-neutral-500">{result.fallback_reason}</p>
-          ) : null}
-        </div>
-      ) : null}
       {errorMessage ? (
         <p className="text-sm text-red-700">{errorMessage}</p>
       ) : null}
