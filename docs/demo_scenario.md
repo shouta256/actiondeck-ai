@@ -1,10 +1,22 @@
 # Demo Scenario
 
-このMVPでは、LINEヤフー採用担当から届いた面談候補日のメールを題材にします。
+このMVPでは、LINEヤフー採用担当から届いた面談候補日のメールを中心に、複数の代表ケースを画面から確認できます。
 
 ActionDeck AIが見せたい価値は、返信文を作ることだけではありません。メール、予定、提出物、ユーザー承認を1枚のAction Cardにまとめ、根拠と処理過程を確認できるようにすることです。
 
-## 入力
+## 画面の入口
+
+`/` の `Demo Scenarios` から代表ケースを開きます。
+
+| Scenario | Source | 見せる価値 |
+| --- | --- | --- |
+| 面談日程調整 | `inbox_001` | 返信案、予定案、ToDoを1枚にまとめる |
+| 予定衝突あり | `inbox_006` | Calendar availabilityで候補日時の衝突を検知する |
+| 情報不足 | `inbox_003` | 候補日時がないためPlanningを省略し、不足情報を求める |
+| 返信不要 | `inbox_004` | 対応不要な入力をterminal routeで処理する |
+| 根拠矛盾 | `inbox_007` | 矛盾がある場合、返信案や予定案を確定しない |
+
+## 基本シナリオ
 
 `inbox_001` は、採用担当からの面談日程調整メールです。
 
@@ -50,17 +62,36 @@ Approval Gate
 
 ## 画面で見る場所
 
-1. `/` でAction Card一覧を見る
-2. `action_001` を開く
-3. Source Messageで元メールを見る
-4. `Run agent` を押す
-5. Latest Agent Runで生成結果を見る
-6. Run Evidenceで根拠を見る
-7. Run Traceで `Triage -> Retrieval -> Planning -> Safety -> Approval Gate` を見る
-8. ReviewでHuman-in-the-loopを確認する
-9. `/eval` でdeterministic評価を見る
-10. `/eval?mode=graph` でLangGraph runner評価とstep path評価を見る
-11. `/eval?mode=gemini` でGemini評価を見る
+1. `/` で `Demo Scenarios` を見る
+2. `面談日程調整` から `action_001` を開く
+3. 画面上部の `Agent Decision` で、Actions、Evidence、Approval、Workflowを見る
+4. Source Messageで元メールを見る
+5. `Run agent` を押す
+6. Latest Agent Runで生成結果を見る
+7. Run Evidenceで根拠を見る
+8. Run Traceで `Triage -> Retrieval -> Planning -> Safety -> Approval Gate` を見る
+9. ReviewでHuman-in-the-loopを確認する
+10. `/eval` でdeterministic評価を見る
+11. `/eval?mode=graph` でLangGraph runner評価とstep path評価を見る
+12. `/eval?mode=gemini` でGemini評価を見る
+
+## 予定衝突シナリオ
+
+`inbox_006` は、2つの候補日時を含む再調整メールです。
+
+- `2026年7月5日 10:00-10:30`
+- `2026年7月5日 11:00-11:30`
+
+ローカルDBの `calendar_events` には、`2026年7月5日 10:00-10:30` に `アルバイト` が入っています。
+
+画面では以下を確認します。
+
+1. `/` の `予定衝突あり` を開く
+2. `Agent Decision` の `Safety` と `Calendar` を確認する
+3. `Safety Notes` で `conflict` と `available` のメモを見る
+4. `Agent Trace` の `calendar_availability_check` tool callを見る
+
+ここで説明したいことは、AIが予定を作成しているのではなく、read-onlyなCalendar情報を使って安全確認だけを行い、最後はユーザー承認で止めている点です。
 
 ## 面接で説明するポイント
 
@@ -69,5 +100,6 @@ Approval Gate
 - 根拠とTraceを表示し、AIの判断を後から確認できます
 - 外部アクションは自動実行せず、Human-in-the-loopで止めます
 - LangGraph runnerはroute別に不要なPlanningを省略し、コストと出力ゆれを抑えます
+- Calendar availabilityはread-onlyで参照し、予定作成は行いません
 - deterministic評価、Graph評価、Gemini評価を分け、legacy比較、標準Graph経路の確認、LLM品質確認を分離しています
 - Graph評価では、出力だけでなく期待したstep pathを通ったかも確認します

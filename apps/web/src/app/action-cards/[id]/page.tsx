@@ -58,6 +58,87 @@ function EmptyText({ children }: { children: React.ReactNode }) {
   return <p className="text-sm text-neutral-500">{children}</p>;
 }
 
+function formatSignalLabel(value: string | boolean | number) {
+  return String(value);
+}
+
+function buildDecisionSignals({
+  card,
+  evidenceItems,
+  agentSteps,
+}: {
+  card: ActionCard;
+  evidenceItems: EvidenceItem[];
+  agentSteps: AgentTraceStep[];
+}) {
+  const calendarToolCalls = agentSteps.flatMap((step) =>
+    step.tool_calls.filter(
+      (toolCall) => toolCall.name === "calendar_availability_check",
+    ),
+  );
+  const planningSkipped = !agentSteps.some(
+    (step) => step.step_name === "action_planning",
+  );
+  const hasCalendarConflict = card.safety_notes.some((note) =>
+    note.includes("衝突"),
+  );
+
+  return [
+    ["Actions", card.actions.join(", ")],
+    ["Evidence", `${evidenceItems.length} items`],
+    ["Approval", card.approval_required ? "required" : "not required"],
+    ["Safety", hasCalendarConflict ? "calendar conflict" : "checked"],
+    ["Workflow", planningSkipped ? "planning skipped" : "full path"],
+    [
+      "Calendar",
+      calendarToolCalls.length > 0
+        ? calendarToolCalls[0].output_summary
+        : "not checked",
+    ],
+  ];
+}
+
+function DecisionOverview({
+  card,
+  evidenceItems,
+  agentSteps,
+}: {
+  card: ActionCard;
+  evidenceItems: EvidenceItem[];
+  agentSteps: AgentTraceStep[];
+}) {
+  const signals = buildDecisionSignals({ card, evidenceItems, agentSteps });
+
+  return (
+    <section className="mb-5 rounded-md border border-neutral-200 bg-white p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-semibold">Agent Decision</h2>
+          <p className="mt-1 text-sm text-neutral-500">
+            根拠、予定、安全確認、承認境界を1つの判断として確認します。
+          </p>
+        </div>
+        <span className="rounded border border-neutral-200 bg-neutral-50 px-2 py-1 font-mono text-xs text-neutral-600">
+          {card.status}
+        </span>
+      </div>
+      <dl className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {signals.map(([label, value]) => (
+          <div
+            className="rounded border border-neutral-200 bg-neutral-50 p-3"
+            key={label}
+          >
+            <dt className="text-xs text-neutral-500">{label}</dt>
+            <dd className="mt-2 break-words font-mono text-xs text-neutral-900">
+              {formatSignalLabel(value)}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
 function SourceMessagePanel({ item }: { item: InboxItem | null }) {
   return (
     <Section title="Source Message">
@@ -215,6 +296,36 @@ function ReviewHistoryPanel({ events }: { events: ReviewEvent[] }) {
   );
 }
 
+function SafetyNoteList({ notes }: { notes: string[] }) {
+  if (notes.length === 0) {
+    return <EmptyText>安全メモはありません。</EmptyText>;
+  }
+
+  return (
+    <ul className="space-y-2 text-sm text-neutral-700">
+      {notes.map((note) => {
+        const isConflict = note.includes("衝突");
+        const isAvailable = note.includes("空いています");
+        const label = isConflict ? "conflict" : isAvailable ? "available" : "note";
+
+        return (
+          <li
+            className="rounded border border-neutral-200 bg-neutral-50 p-3"
+            key={note}
+          >
+            <div className="flex items-start gap-3">
+              <span className="shrink-0 rounded border border-neutral-200 bg-white px-2 py-1 font-mono text-[11px] text-neutral-600">
+                {label}
+              </span>
+              <span className="leading-6">{note}</span>
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 function AgentTracePanel({ steps }: { steps: AgentTraceStep[] }) {
   return (
     <Section title="Agent Trace">
@@ -252,7 +363,11 @@ function AgentTracePanel({ steps }: { steps: AgentTraceStep[] }) {
                 <ul className="mt-3 space-y-2">
                   {step.tool_calls.map((toolCall) => (
                     <li
-                      className="rounded border border-neutral-200 bg-neutral-50 p-3 text-sm"
+                      className={`rounded border p-3 text-sm ${
+                        toolCall.name === "calendar_availability_check"
+                          ? "border-neutral-300 bg-white"
+                          : "border-neutral-200 bg-neutral-50"
+                      }`}
                       key={`${step.sequence}-${toolCall.name}`}
                     >
                       <p className="font-mono text-xs text-neutral-500">
@@ -329,15 +444,7 @@ function ReviewPanel({
       </Section>
 
       <Section title="Safety Notes">
-        {card.safety_notes.length > 0 ? (
-          <ul className="space-y-2 text-sm text-neutral-700">
-            {card.safety_notes.map((note) => (
-              <li key={note}>{note}</li>
-            ))}
-          </ul>
-        ) : (
-          <EmptyText>安全メモはありません。</EmptyText>
-        )}
+        <SafetyNoteList notes={card.safety_notes} />
       </Section>
 
       <EvidencePanel evidenceItems={evidenceItems} />
@@ -381,6 +488,12 @@ export default async function ActionCardDetailPage({ params }: PageProps) {
           <p className="font-mono text-xs text-neutral-500">{card.id}</p>
           <h1 className="mt-2 text-xl font-semibold">{card.title}</h1>
         </div>
+
+        <DecisionOverview
+          card={card}
+          evidenceItems={evidenceItems}
+          agentSteps={agentSteps}
+        />
 
         <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
           <div className="space-y-4">
