@@ -188,5 +188,39 @@
     "evidence_ids": ["ev_010"],
     "missing_info": ["最終面談の候補日時が不足しています"],
     "safety_notes": ["候補日時がないため、返信案や予定案は作成しません"]
+  },
+  {
+    "schema_version": "1.0",
+    "id": "action_010",
+    "source_item_id": "inbox_010",
+    "title": "対応不要のメンテナンス通知",
+    "actions": ["ignore"],
+    "priority": "low",
+    "risk_level": "low",
+    "confidence": 0.91,
+    "approval_required": false,
+    "status": "draft",
+    "summary": "メンテナンス完了通知であり、返信やタスク化は不要。",
+    "proposal": {},
+    "evidence_ids": [],
+    "missing_info": [],
+    "safety_notes": []
+  },
+  {
+    "schema_version": "1.0",
+    "id": "action_011",
+    "source_item_id": "inbox_011",
+    "title": "曖昧な返信内容の確認",
+    "actions": ["request_missing_info"],
+    "priority": "medium",
+    "risk_level": "low",
+    "confidence": 0.7,
+    "approval_required": false,
+    "status": "draft",
+    "summary": "返信依頼はあるが、何について返信するかが曖昧なため、先に返信対象を確認する。",
+    "proposal": {},
+    "evidence_ids": ["ev_011"],
+    "missing_info": ["返信対象と返信内容が不足しています"],
+    "safety_notes": ["返信対象が曖昧なため、返信案は作成しません"]
   }
 ]

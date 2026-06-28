@@ -98,5 +98,15 @@
     "relevance_score": 0.9,
     "used_for": "missing_info",
     "chunk_id": "chunk_note_005"
+  },
+  {
+    "id": "ev_011",
+    "source_type": "personal_note",
+    "source_id": "note_006",
+    "title": "曖昧な返信依頼の確認ルール",
+    "snippet": "返信対象や返信内容が曖昧な依頼は、返信案を作る前に何について返信するかを確認する。",
+    "relevance_score": 0.88,
+    "used_for": "missing_info",
+    "chunk_id": "chunk_note_006"
   }
 ]

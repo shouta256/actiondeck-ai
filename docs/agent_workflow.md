@@ -82,7 +82,7 @@ Safety Check後に、人間の承認境界をTraceへ明示します。
 
 ## Evaluation
 
-評価APIでは、評価ケースごとにAgent Workflowを実行し、期待値と比較します。現在は10件のケースで、返信のみ、予定調整、低リスクToDo、情報不足、無視、根拠矛盾を確認します。
+評価APIでは、評価ケースごとにAgent Workflowを実行し、期待値と比較します。現在は12件のケースで、返信のみ、予定調整、低リスクToDo、情報不足、無視、根拠矛盾を確認します。
 
 Geminiを毎回呼ぶ評価は出力が揺れやすく、CIにも向きません。そのためMVPでは、`GEMINI_API_KEY` を使わない設定でworkflowを動かし、Action Cardのactions、priority、approval_required、missing_info、required evidence、schema validation、各stepの完了状態を確認します。
 

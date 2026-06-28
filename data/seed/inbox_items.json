@@ -79,5 +79,23 @@
     "subject": "最終面談の日程調整",
     "received_at": "2026-06-28T10:20:00",
     "body": "鈴木様\n\n最終面談を早めに設定したいです。\n今週中でご都合のよい時間を教えてください。"
+  },
+  {
+    "id": "inbox_010",
+    "channel": "email",
+    "sender_name": "システム管理",
+    "sender_address": "system@example.com",
+    "subject": "メンテナンス完了のお知らせ",
+    "received_at": "2026-06-28T12:00:00",
+    "body": "本日のシステムメンテナンスは完了しました。\n利用者側で必要な作業や返信はありません。"
+  },
+  {
+    "id": "inbox_011",
+    "channel": "email",
+    "sender_name": "LINEヤフー 採用担当",
+    "sender_address": "recruit@example.com",
+    "subject": "返信内容の確認",
+    "received_at": "2026-06-28T13:15:00",
+    "body": "鈴木様\n\n先ほどの件について、返信内容を確認したいです。\nどの内容で返信するか教えてください。"
   }
 ]

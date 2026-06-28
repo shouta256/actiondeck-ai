@@ -30,6 +30,9 @@ Planning
 
 Safety Check
   メール返信と予定作成はユーザー承認が必要だと確認する
+
+Approval Gate
+  外部アクションを実行せず、ユーザー承認待ちで止める
 ```
 
 ## 出力
@@ -53,10 +56,10 @@ Safety Check
 4. `Run agent` を押す
 5. Latest Agent Runで生成結果を見る
 6. Run Evidenceで根拠を見る
-7. Run Traceで `Triage -> Retrieval -> Planning -> Safety` を見る
+7. Run Traceで `Triage -> Retrieval -> Planning -> Safety -> Approval Gate` を見る
 8. ReviewでHuman-in-the-loopを確認する
 9. `/eval` でdeterministic評価を見る
-10. `/eval?mode=graph` でLangGraph runner評価を見る
+10. `/eval?mode=graph` でLangGraph runner評価とstep path評価を見る
 11. `/eval?mode=gemini` でGemini評価を見る
 
 ## 面接で説明するポイント
@@ -65,4 +68,6 @@ Safety Check
 - Agent出力はPydantic schemaで検証します
 - 根拠とTraceを表示し、AIの判断を後から確認できます
 - 外部アクションは自動実行せず、Human-in-the-loopで止めます
+- LangGraph runnerはroute別に不要なPlanningを省略し、コストと出力ゆれを抑えます
 - deterministic評価、Graph評価、Gemini評価を分け、legacy比較、標準Graph経路の確認、LLM品質確認を分離しています
+- Graph評価では、出力だけでなく期待したstep pathを通ったかも確認します
