@@ -28,7 +28,7 @@ MVPでは、まず処理の境界を明確にするため、`apps/api/app/agents
 
 - `apps/web`: ユーザーがAction Cardを確認・承認する画面
 - `apps/api`: Action Card、Evidence、Agent Traceを扱うAPI
-- `apps/api/app/agents`: Agent Runのworkflowと各node
+- `apps/api/app/agents`: LangGraph runner、legacy workflow、各node、共通runtime
 - `infra`: ローカル開発用のDBなどのインフラ設定
 - `data/seed`: デモ用の手動インポートデータ
 - `data/eval_cases`: 評価ケース

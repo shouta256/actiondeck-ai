@@ -7,7 +7,7 @@ from collections.abc import Callable
 from app.agents import (
     AgentWorkflowResult,
     run_agent_graph_workflow,
-    run_agent_workflow,
+    run_legacy_agent_workflow,
 )
 from app.schemas import (
     ActionCard,
@@ -131,7 +131,7 @@ def _workflow_runner_for_eval_mode(
 ) -> Callable[..., AgentWorkflowResult]:
     if mode == ActionCardEvalMode.GRAPH:
         return run_agent_graph_workflow
-    return run_agent_workflow
+    return run_legacy_agent_workflow
 
 
 def _evaluate_case(

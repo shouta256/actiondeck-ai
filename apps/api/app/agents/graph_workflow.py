@@ -9,13 +9,13 @@ from app.agents.nodes import (
     retrieve_evidence,
     triage,
 )
-from app.agents.state import AgentState
-from app.agents.workflow import (
+from app.agents.runtime import (
     AgentWorkflowResult,
-    _list_referenced_evidence_items,
-    _run_node,
-    _to_trace_step,
+    list_referenced_evidence_items,
+    run_node as run_agent_node,
+    to_trace_step,
 )
+from app.agents.state import AgentState
 from app.schemas import (
     ActionCard,
     AgentRunGenerationMode,
@@ -65,14 +65,14 @@ def run_agent_graph_workflow(
         state.generation_mode = AgentRunGenerationMode.DETERMINISTIC_TEMPLATE
         state.fallback_reason = "Agent graph workflow did not produce an Action Card"
 
-    referenced_evidence_items = _list_referenced_evidence_items(
+    referenced_evidence_items = list_referenced_evidence_items(
         action_card=state.action_card,
         evidence_items=evidence_items,
     )
     return AgentWorkflowResult(
         action_card=state.action_card,
         agent_steps=[
-            _to_trace_step(
+            to_trace_step(
                 action_card_id=state.action_card.id,
                 sequence=sequence,
                 node_result=node_result,
@@ -114,15 +114,15 @@ def _next_after_triage(graph_state: GraphWorkflowState) -> str:
 
 
 def _node_runner(node):
-    def run_node(graph_state: GraphWorkflowState) -> GraphWorkflowState:
+    def run_graph_node(graph_state: GraphWorkflowState) -> GraphWorkflowState:
         agent_state = graph_state["agent_state"]
-        node_result = _run_node(agent_state, node)
+        node_result = run_agent_node(agent_state, node)
         return GraphWorkflowState(
             agent_state=agent_state,
             node_results=[*graph_state["node_results"], node_result],
         )
 
-    return run_node
+    return run_graph_node
 
 
 def _safety_node_runner():
@@ -137,7 +137,7 @@ def _safety_node_runner():
                 else "Graph route skipped planning"
             )
 
-        node_result = _run_node(agent_state, check_safety)
+        node_result = run_agent_node(agent_state, check_safety)
         return GraphWorkflowState(
             agent_state=agent_state,
             node_results=[*graph_state["node_results"], node_result],
