@@ -69,6 +69,21 @@ def test_graph_workflow_skips_planning_for_conflicting_evidence_route():
     ]
 
 
+def test_graph_workflow_skips_planning_for_low_risk_todo_route():
+    result = _run_graph_workflow_for_inbox("inbox_005")
+
+    assert result.route == AgentRoute.LOW_RISK_TODO
+    assert result.action_card.id == "action_005"
+    assert result.generation_mode == AgentRunGenerationMode.DETERMINISTIC_TEMPLATE
+    assert result.fallback_reason == "Graph route skipped planning for low_risk_todo"
+    assert [step.step_name for step in result.agent_steps] == [
+        AgentStepName.TRIAGE,
+        AgentStepName.EVIDENCE_RETRIEVAL,
+        AgentStepName.SAFETY_CHECK,
+        AgentStepName.APPROVAL_GATE,
+    ]
+
+
 def _run_graph_workflow_for_inbox(inbox_item_id: str):
     inbox_item = get_inbox_item(inbox_item_id)
     assert inbox_item is not None

@@ -39,6 +39,13 @@ TERMINAL_TRIAGE_ROUTES = frozenset(
     }
 )
 
+SKIP_PLANNING_AFTER_RETRIEVAL_ROUTES = frozenset(
+    {
+        AgentRoute.CONFLICTING_EVIDENCE,
+        AgentRoute.LOW_RISK_TODO,
+    }
+)
+
 
 def run_agent_graph_workflow(
     *,
@@ -124,7 +131,7 @@ def _next_after_triage(graph_state: GraphWorkflowState) -> str:
 
 
 def _next_after_retrieval(graph_state: GraphWorkflowState) -> str:
-    if graph_state["agent_state"].route == AgentRoute.CONFLICTING_EVIDENCE:
+    if graph_state["agent_state"].route in SKIP_PLANNING_AFTER_RETRIEVAL_ROUTES:
         return "skip_to_safety"
     return "continue"
 
