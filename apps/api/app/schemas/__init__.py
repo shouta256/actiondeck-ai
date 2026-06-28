@@ -22,6 +22,7 @@ from app.schemas.action_card import (
     RiskLevel,
     TodoProposal,
 )
+from app.schemas.calendar_event import CalendarEvent
 from app.schemas.evidence import EvidenceItem, EvidenceSourceType
 from app.schemas.evaluation import (
     ActionCardEvalCase,
@@ -52,6 +53,7 @@ __all__ = [
     "AgentToolCall",
     "AgentTraceStep",
     "CalendarEventProposal",
+    "CalendarEvent",
     "EvidenceItem",
     "EvidenceSourceType",
     "InboxChannel",

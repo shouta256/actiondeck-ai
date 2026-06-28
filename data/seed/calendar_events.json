@@ -1,0 +1,29 @@
+[
+  {
+    "id": "cal_001",
+    "calendar_id": "primary",
+    "title": "アルバイト",
+    "start": "2026-07-05T10:00:00",
+    "end": "2026-07-05T10:30:00",
+    "location": "渋谷",
+    "source": "local_seed"
+  },
+  {
+    "id": "cal_002",
+    "calendar_id": "primary",
+    "title": "大学ゼミ",
+    "start": "2026-07-06T10:00:00",
+    "end": "2026-07-06T10:30:00",
+    "location": "大学",
+    "source": "local_seed"
+  },
+  {
+    "id": "cal_003",
+    "calendar_id": "primary",
+    "title": "ポートフォリオ作業",
+    "start": "2026-07-02T20:00:00",
+    "end": "2026-07-02T22:00:00",
+    "location": null,
+    "source": "local_seed"
+  }
+]

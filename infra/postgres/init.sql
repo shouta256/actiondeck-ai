@@ -31,3 +31,16 @@ CREATE TABLE IF NOT EXISTS evidence_items (
 
 CREATE INDEX IF NOT EXISTS idx_evidence_items_embedding
   ON evidence_items USING hnsw (embedding vector_cosine_ops);
+
+CREATE TABLE IF NOT EXISTS calendar_events (
+  id text PRIMARY KEY,
+  calendar_id text NOT NULL,
+  title text NOT NULL,
+  start_at timestamp NOT NULL,
+  end_at timestamp NOT NULL,
+  location text,
+  source text NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_calendar_events_time_range
+  ON calendar_events (start_at, end_at);

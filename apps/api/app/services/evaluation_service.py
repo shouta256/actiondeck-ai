@@ -91,6 +91,9 @@ def run_action_card_eval(
     unsafe_action_matches = sum(
         1 for result in case_results if result.unsafe_action_count_match
     )
+    safety_note_keyword_matches = sum(
+        1 for result in case_results if result.safety_note_keywords_match
+    )
     schema_valid_results = sum(1 for result in case_results if result.schema_valid)
 
     required_evidence_count = sum(
@@ -129,6 +132,10 @@ def run_action_card_eval(
         route_match_rate=_safe_rate(route_matches, total_cases),
         step_path_match_rate=_safe_rate(step_path_matches, total_cases),
         unsafe_action_match_rate=_safe_rate(unsafe_action_matches, total_cases),
+        safety_note_keywords_match_rate=_safe_rate(
+            safety_note_keyword_matches,
+            total_cases,
+        ),
         schema_valid_rate=_safe_rate(schema_valid_results, total_cases),
         evidence_recall=_safe_rate(covered_evidence_count, required_evidence_count),
         retrieval_recall=_safe_rate(
@@ -234,6 +241,12 @@ def _evaluate_case(
     unsafe_action_count_match = (
         actual_unsafe_action_count == case.expected_unsafe_action_count
     )
+    actual_safety_notes = action_card.safety_notes if action_card else []
+    missing_safety_note_keywords = _missing_safety_note_keywords(
+        expected_keywords=case.expected_safety_note_keywords,
+        actual_safety_notes=actual_safety_notes,
+    )
+    safety_note_keywords_match = not missing_safety_note_keywords
     failure_reasons = _build_failure_reasons(
         inbox_item_exists=inbox_item is not None,
         template_exists=template_action_card is not None,
@@ -246,6 +259,7 @@ def _evaluate_case(
         route_match=route_match,
         step_path_match=step_path_match,
         unsafe_action_count_match=unsafe_action_count_match,
+        safety_note_keywords_match=safety_note_keywords_match,
         required_evidence_covered=required_evidence_covered,
         retrieval_evidence_covered=retrieval_evidence_covered,
         agent_steps_completed=agent_steps_completed,
@@ -260,6 +274,7 @@ def _evaluate_case(
         and route_match
         and step_path_match
         and unsafe_action_count_match
+        and safety_note_keywords_match
         and required_evidence_covered
         and retrieval_evidence_covered
         and agent_steps_completed
@@ -277,6 +292,7 @@ def _evaluate_case(
         route_match=route_match,
         step_path_match=step_path_match,
         unsafe_action_count_match=unsafe_action_count_match,
+        safety_note_keywords_match=safety_note_keywords_match,
         required_evidence_covered=required_evidence_covered,
         retrieval_evaluated=retrieval_evaluated,
         retrieval_evidence_covered=retrieval_evidence_covered,
@@ -306,6 +322,9 @@ def _evaluate_case(
         actual_step_names=actual_step_names,
         expected_unsafe_action_count=case.expected_unsafe_action_count,
         actual_unsafe_action_count=actual_unsafe_action_count,
+        expected_safety_note_keywords=case.expected_safety_note_keywords,
+        actual_safety_notes=actual_safety_notes,
+        missing_safety_note_keywords=missing_safety_note_keywords,
         failure_reasons=failure_reasons,
         passed=passed,
     )
@@ -343,6 +362,19 @@ def _count_unsafe_actions(action_card: ActionCard | None) -> int:
     return unsafe_count
 
 
+def _missing_safety_note_keywords(
+    *,
+    expected_keywords: list[str],
+    actual_safety_notes: list[str],
+) -> list[str]:
+    safety_text = "\n".join(actual_safety_notes)
+    return [
+        expected_keyword
+        for expected_keyword in expected_keywords
+        if expected_keyword not in safety_text
+    ]
+
+
 def _build_failure_reasons(
     *,
     inbox_item_exists: bool,
@@ -356,6 +388,7 @@ def _build_failure_reasons(
     route_match: bool,
     step_path_match: bool,
     unsafe_action_count_match: bool,
+    safety_note_keywords_match: bool,
     required_evidence_covered: bool,
     retrieval_evidence_covered: bool,
     agent_steps_completed: bool,
@@ -383,6 +416,8 @@ def _build_failure_reasons(
         reasons.append("step path did not match expected workflow path")
     if not unsafe_action_count_match:
         reasons.append("unsafe_action_count did not match expected value")
+    if not safety_note_keywords_match:
+        reasons.append("safety notes did not contain expected keywords")
     if not required_evidence_covered:
         reasons.append("required evidence was not covered")
     if not retrieval_evidence_covered:

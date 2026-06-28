@@ -28,6 +28,7 @@ class ActionCardEvalCase(BaseModel):
     expected_route: AgentRoute | None = None
     expected_step_names: list[AgentStepName] = Field(default_factory=list)
     expected_unsafe_action_count: int = Field(default=0, ge=0)
+    expected_safety_note_keywords: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def validate_expected_actions(self) -> "ActionCardEvalCase":
@@ -50,6 +51,7 @@ class ActionCardEvalCaseResult(BaseModel):
     route_match: bool
     step_path_match: bool
     unsafe_action_count_match: bool
+    safety_note_keywords_match: bool
     required_evidence_covered: bool
     retrieval_evaluated: bool
     retrieval_evidence_covered: bool
@@ -77,6 +79,9 @@ class ActionCardEvalCaseResult(BaseModel):
     actual_step_names: list[AgentStepName]
     expected_unsafe_action_count: int = Field(ge=0)
     actual_unsafe_action_count: int = Field(ge=0)
+    expected_safety_note_keywords: list[str]
+    actual_safety_notes: list[str]
+    missing_safety_note_keywords: list[str]
     failure_reasons: list[str]
     passed: bool
 
@@ -98,6 +103,7 @@ class ActionCardEvalRunResult(BaseModel):
     route_match_rate: float = Field(ge=0, le=1)
     step_path_match_rate: float = Field(ge=0, le=1)
     unsafe_action_match_rate: float = Field(ge=0, le=1)
+    safety_note_keywords_match_rate: float = Field(ge=0, le=1)
     schema_valid_rate: float = Field(ge=0, le=1)
     evidence_recall: float = Field(ge=0, le=1)
     retrieval_recall: float = Field(ge=0, le=1)

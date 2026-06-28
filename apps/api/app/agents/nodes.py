@@ -13,6 +13,11 @@ from app.schemas import (
     RiskLevel,
 )
 from app.schemas.agent_route import AgentRoute
+from app.services.calendar_availability import (
+    check_calendar_availability,
+    describe_calendar_availability,
+    proposal_conflicts_with_calendar,
+)
 from app.services.evidence_vector_store import search_evidence_with_pgvector
 from app.services.gemini_client import generate_action_card_with_gemini
 
@@ -162,6 +167,7 @@ def check_safety(state: AgentState) -> AgentNodeResult:
             output_summary="Safety check could not run.",
         )
 
+    calendar_tool_call = _apply_calendar_availability_notes(state)
     action_set = set(state.action_card.actions)
     requires_approval = (
         bool(
@@ -201,6 +207,7 @@ def check_safety(state: AgentState) -> AgentNodeResult:
             "Schema and evidence references are valid; "
             f"{review_note}."
         ),
+        tool_calls=([calendar_tool_call] if calendar_tool_call else []),
     )
 
 
@@ -330,3 +337,53 @@ def _extract_date_keys(text: str) -> set[str]:
     for year, month, day in re.findall(r"(20\d{2})年(\d{1,2})月(\d{1,2})日", text):
         date_keys.add(f"{year}-{int(month):02d}-{int(day):02d}")
     return date_keys
+
+
+def _apply_calendar_availability_notes(
+    state: AgentState,
+) -> AgentToolCall | None:
+    if not state.triage_signals.get("has_schedule", False):
+        return None
+
+    availability = check_calendar_availability(_inbox_text(state))
+    state.calendar_availability = availability
+
+    notes = list(state.action_card.safety_notes) if state.action_card else []
+    availability_notes = list(describe_calendar_availability(availability))
+    notes.extend(note for note in availability_notes if note not in notes)
+
+    if state.action_card and state.action_card.proposal.calendar_event:
+        proposed_event = state.action_card.proposal.calendar_event
+        conflicting_events = proposal_conflicts_with_calendar(
+            start=proposed_event.start,
+            end=proposed_event.end,
+        )
+        for event in conflicting_events:
+            note = (
+                "提案予定が既存予定"
+                f"「{event.title}」({event.id}) と衝突します"
+            )
+            if note not in notes:
+                notes.append(note)
+
+    if state.action_card and notes != state.action_card.safety_notes:
+        state.action_card = state.action_card.model_copy(
+            update={"safety_notes": notes}
+        )
+
+    if not availability.has_candidates:
+        output = "No explicit calendar candidates were found."
+    else:
+        conflict_count = sum(
+            1 for candidate in availability.candidates if not candidate.is_available
+        )
+        output = (
+            f"Checked {len(availability.candidates)} candidate slots; "
+            f"{conflict_count} conflicts found."
+        )
+
+    return AgentToolCall(
+        name="calendar_availability_check",
+        input_summary="Read-only local calendar events were compared with schedule candidates.",
+        output_summary=output,
+    )

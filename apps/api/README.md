@@ -2,7 +2,7 @@
 
 ActionDeck AIのバックエンドです。
 
-FastAPIでAction Card、Evidence、Agent Trace、Review Event、Agent Run、Evaluationを扱います。
+FastAPIでAction Card、Evidence、Calendar Event、Agent Trace、Review Event、Agent Run、Evaluationを扱います。
 
 Agent Runでは現在、標準経路としてLangGraph runnerを実行します。routeごとに必要なnodeだけを通し、最後にApproval Gateで外部実行せずユーザー承認待ちにします。
 
@@ -23,6 +23,8 @@ Geminiが使えない場合やschema検証に失敗した場合は、determinist
 
 Evidence検索では、PostgreSQLの `evidence_items` テーブルに `embedding vector(768)` を保存し、pgvectorのcosine距離でtop-k検索します。`EMBEDDING_PROVIDER=gemini` の場合はGemini Embeddingを使い、APIキー未設定やAPI失敗時はlocal deterministic embeddingへfallbackします。DB未起動、未seed、pgvector検索失敗時はseed JSONのkeyword scoringにfallbackします。
 
+Calendar確認では、PostgreSQLの `calendar_events` テーブルにseedした予定をread-onlyで参照します。Safety CheckでInbox本文の候補日時と既存予定を比較し、衝突や空き状況をAction Cardの `safety_notes` とTraceの `calendar_availability_check` に残します。MVPでは予定作成・更新は行いません。
+
 ## 起動
 
 リポジトリルートから実行します。
@@ -39,7 +41,7 @@ make db-up
 
 `agent_runs` はPostgresの `agent_runs` テーブルに保存されます。Postgresに接続できない場合、開発中に画面が壊れないよう一時的にメモリ保存へfallbackします。
 
-Evidence seed投入:
+EvidenceとCalendar Eventのseed投入:
 
 ```bash
 make db-seed

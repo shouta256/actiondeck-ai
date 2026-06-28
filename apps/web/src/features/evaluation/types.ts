@@ -25,6 +25,7 @@ export type ActionCardEvalCaseResult = {
   route_match: boolean;
   step_path_match: boolean;
   unsafe_action_count_match: boolean;
+  safety_note_keywords_match: boolean;
   required_evidence_covered: boolean;
   retrieval_evaluated: boolean;
   retrieval_evidence_covered: boolean;
@@ -52,6 +53,9 @@ export type ActionCardEvalCaseResult = {
   actual_step_names: AgentStepName[];
   expected_unsafe_action_count: number;
   actual_unsafe_action_count: number;
+  expected_safety_note_keywords: string[];
+  actual_safety_notes: string[];
+  missing_safety_note_keywords: string[];
   failure_reasons: string[];
   passed: boolean;
 };
@@ -71,6 +75,7 @@ export type ActionCardEvalRunResult = {
   route_match_rate: number;
   step_path_match_rate: number;
   unsafe_action_match_rate: number;
+  safety_note_keywords_match_rate: number;
   schema_valid_rate: number;
   evidence_recall: number;
   retrieval_recall: number;

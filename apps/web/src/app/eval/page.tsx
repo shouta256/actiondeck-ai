@@ -55,6 +55,7 @@ function buildMetrics(result: ActionCardEvalRunResult) {
     ["Route match", formatRate(result.route_match_rate)],
     ["Step path", formatRate(result.step_path_match_rate)],
     ["Unsafe match", formatRate(result.unsafe_action_match_rate)],
+    ["Safety notes", formatRate(result.safety_note_keywords_match_rate)],
     ["Evidence recall", formatRate(result.evidence_recall)],
     ["Retrieval recall", formatRate(result.retrieval_recall)],
   ];
@@ -189,6 +190,7 @@ export default async function EvalPage({ searchParams }: EvalPageProps) {
                 <th className="px-4 py-3">Priority</th>
                 <th className="px-4 py-3">Approval</th>
                 <th className="px-4 py-3">Unsafe</th>
+                <th className="px-4 py-3">Safety</th>
                 <th className="px-4 py-3">Evidence</th>
                 <th className="px-4 py-3">Retrieval</th>
                 <th className="px-4 py-3">Workflow</th>
@@ -252,6 +254,11 @@ export default async function EvalPage({ searchParams }: EvalPageProps) {
                         ? "ok"
                         : `${testCase.actual_unsafe_action_count}/${testCase.expected_unsafe_action_count}`}
                     </td>
+                    <td className="px-4 py-3 text-xs text-neutral-700">
+                      {testCase.safety_note_keywords_match
+                        ? "ok"
+                        : testCase.missing_safety_note_keywords.join(", ")}
+                    </td>
                     <td className="px-4 py-3 text-neutral-700">
                       {testCase.required_evidence_covered
                         ? "ok"
@@ -309,7 +316,7 @@ export default async function EvalPage({ searchParams }: EvalPageProps) {
                 <tr>
                   <td
                     className="px-4 py-6 text-sm text-neutral-500"
-                    colSpan={14}
+                    colSpan={15}
                   >
                     表示できる評価結果がありません。
                   </td>

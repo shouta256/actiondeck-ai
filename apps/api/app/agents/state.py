@@ -7,6 +7,7 @@ from app.schemas import (
     InboxItem,
 )
 from app.schemas.agent_route import AgentRoute
+from app.services.calendar_availability import CalendarAvailabilityResult
 from app.settings import Settings
 
 
@@ -19,6 +20,7 @@ class AgentState:
     triage_signals: dict[str, bool] = field(default_factory=dict)
     route: AgentRoute | None = None
     retrieved_evidence_items: tuple[EvidenceItem, ...] = ()
+    calendar_availability: CalendarAvailabilityResult | None = None
     action_card: ActionCard | None = None
     generation_mode: AgentRunGenerationMode = (
         AgentRunGenerationMode.DETERMINISTIC_TEMPLATE

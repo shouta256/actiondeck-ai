@@ -39,6 +39,7 @@ db-check:
 
 db-seed:
 	cd apps/api && PYTHONPATH=. uv run python scripts/seed_evidence_vectors.py
+	cd apps/api && PYTHONPATH=. uv run python scripts/seed_calendar_events.py
 
 check: web-lint web-build api-check compose-check
 

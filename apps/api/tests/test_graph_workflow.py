@@ -51,6 +51,24 @@ def test_graph_workflow_runs_full_path_for_review_required_route():
     ]
 
 
+def test_graph_workflow_adds_calendar_availability_to_safety_notes():
+    result = _run_graph_workflow_for_inbox("inbox_006")
+
+    safety_text = "\n".join(result.action_card.safety_notes)
+    assert "アルバイト" in safety_text
+    assert "cal_001" in safety_text
+
+    safety_step = next(
+        step
+        for step in result.agent_steps
+        if step.step_name == AgentStepName.SAFETY_CHECK
+    )
+    assert any(
+        tool_call.name == "calendar_availability_check"
+        for tool_call in safety_step.tool_calls
+    )
+
+
 def test_graph_workflow_skips_planning_for_conflicting_evidence_route():
     result = _run_graph_workflow_for_inbox("inbox_007")
 

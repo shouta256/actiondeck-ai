@@ -14,6 +14,10 @@ async def main() -> None:
             "select to_regclass('public.evidence_items')"
         )
         print(f"evidence_items: {evidence_table_name}")
+        calendar_table_name = await connection.fetchval(
+            "select to_regclass('public.calendar_events')"
+        )
+        print(f"calendar_events: {calendar_table_name}")
     finally:
         await connection.close()
 
