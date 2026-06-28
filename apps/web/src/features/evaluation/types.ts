@@ -4,7 +4,7 @@ import type {
   Priority,
 } from "@/features/action-cards/types";
 
-export type ActionCardEvalMode = "deterministic" | "gemini";
+export type ActionCardEvalMode = "deterministic" | "gemini" | "graph";
 export type AgentRoute =
   | "conflicting_evidence"
   | "ignore"

@@ -31,6 +31,14 @@ class GraphWorkflowState(TypedDict):
     node_results: list[tuple[AgentNodeResult, int]]
 
 
+TERMINAL_TRIAGE_ROUTES = frozenset(
+    {
+        AgentRoute.IGNORE,
+        AgentRoute.MISSING_INFO,
+    }
+)
+
+
 def run_agent_graph_workflow(
     *,
     inbox_item: InboxItem,
@@ -100,7 +108,7 @@ def _build_graph():
 
 
 def _next_after_triage(graph_state: GraphWorkflowState) -> str:
-    if graph_state["agent_state"].route == AgentRoute.IGNORE:
+    if graph_state["agent_state"].route in TERMINAL_TRIAGE_ROUTES:
         return "skip_to_safety"
     return "continue"
 
@@ -123,7 +131,11 @@ def _safety_node_runner():
         if agent_state.action_card is None:
             agent_state.action_card = agent_state.template_action_card
             agent_state.generation_mode = AgentRunGenerationMode.DETERMINISTIC_TEMPLATE
-            agent_state.fallback_reason = "Graph route skipped planning for ignore"
+            agent_state.fallback_reason = (
+                f"Graph route skipped planning for {agent_state.route.value}"
+                if agent_state.route
+                else "Graph route skipped planning"
+            )
 
         node_result = _run_node(agent_state, check_safety)
         return GraphWorkflowState(

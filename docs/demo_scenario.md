@@ -56,7 +56,8 @@ Safety Check
 7. Run Traceで `Triage -> Retrieval -> Planning -> Safety` を見る
 8. ReviewでHuman-in-the-loopを確認する
 9. `/eval` でdeterministic評価を見る
-10. `/eval?mode=gemini` でGemini評価を見る
+10. `/eval?mode=graph` でLangGraph runner評価を見る
+11. `/eval?mode=gemini` でGemini評価を見る
 
 ## 面接で説明するポイント
 
@@ -64,4 +65,4 @@ Safety Check
 - Agent出力はPydantic schemaで検証します
 - 根拠とTraceを表示し、AIの判断を後から確認できます
 - 外部アクションは自動実行せず、Human-in-the-loopで止めます
-- deterministic評価とGemini評価を分け、安定確認とLLM品質確認を分離しています
+- deterministic評価、Graph評価、Gemini評価を分け、安定確認、移行確認、LLM品質確認を分離しています

@@ -2,7 +2,13 @@ import json
 from functools import lru_cache
 from pathlib import Path
 
-from app.agents import AgentWorkflowResult, run_agent_workflow
+from collections.abc import Callable
+
+from app.agents import (
+    AgentWorkflowResult,
+    run_agent_graph_workflow,
+    run_agent_workflow,
+)
 from app.schemas import (
     ActionCard,
     ActionCardStatus,
@@ -43,6 +49,7 @@ def run_action_card_eval(
         card.source_item_id: card for card in list_action_cards()
     }
     settings = _settings_for_eval_mode(mode)
+    workflow_runner = _workflow_runner_for_eval_mode(mode)
     case_results = tuple(
         _evaluate_case(
             case=case,
@@ -50,6 +57,7 @@ def run_action_card_eval(
                 case.input_item_id
             ),
             settings=settings,
+            workflow_runner=workflow_runner,
         )
         for case in cases
     )
@@ -113,19 +121,28 @@ def run_action_card_eval(
 
 def _settings_for_eval_mode(mode: ActionCardEvalMode):
     settings = get_settings()
-    if mode == ActionCardEvalMode.DETERMINISTIC:
+    if mode in {ActionCardEvalMode.DETERMINISTIC, ActionCardEvalMode.GRAPH}:
         return settings.model_copy(update={"gemini_api_key": None})
     return settings
+
+
+def _workflow_runner_for_eval_mode(
+    mode: ActionCardEvalMode,
+) -> Callable[..., AgentWorkflowResult]:
+    if mode == ActionCardEvalMode.GRAPH:
+        return run_agent_graph_workflow
+    return run_agent_workflow
 
 
 def _evaluate_case(
     case: ActionCardEvalCase,
     template_action_card: ActionCard | None,
     settings,
+    workflow_runner: Callable[..., AgentWorkflowResult],
 ) -> ActionCardEvalCaseResult:
     inbox_item = get_inbox_item(case.input_item_id)
     workflow_result = (
-        run_agent_workflow(
+        workflow_runner(
             inbox_item=inbox_item,
             template_action_card=template_action_card,
             evidence_items=list_evidence_items(),

@@ -53,7 +53,20 @@ function buildMetrics(result: ActionCardEvalRunResult) {
 }
 
 function parseEvalMode(value: string | undefined): ActionCardEvalMode {
-  return value === "gemini" ? "gemini" : "deterministic";
+  if (value === "gemini" || value === "graph") {
+    return value;
+  }
+  return "deterministic";
+}
+
+function evalModeDescription(mode: ActionCardEvalMode) {
+  if (mode === "gemini") {
+    return "Gemini modeは手動確認用です。APIキーが未設定、またはGemini生成に失敗した場合はtemplate fallbackで評価します。";
+  }
+  if (mode === "graph") {
+    return "Graph modeはLangGraph runnerの移行確認用です。Geminiを呼ばず、Graph上の分岐と既存評価ケースの整合性を確認します。";
+  }
+  return "Deterministic modeはCI向けの安定した評価です。Geminiを呼ばずにtemplate fallbackで評価します。";
 }
 
 async function loadEvalResult(mode: ActionCardEvalMode) {
@@ -119,16 +132,20 @@ export default async function EvalPage({ searchParams }: EvalPageProps) {
             >
               Gemini
             </Link>
+            <Link
+              className={`rounded border px-3 py-1.5 text-sm ${
+                mode === "graph"
+                  ? "border-neutral-950 bg-neutral-950 text-white"
+                  : "border-neutral-200 bg-white text-neutral-700"
+              }`}
+              href="/eval?mode=graph"
+            >
+              Graph
+            </Link>
           </div>
-          {mode === "gemini" ? (
-            <p className="mt-2 text-xs text-neutral-500">
-              Gemini modeは手動確認用です。APIキーが未設定、またはGemini生成に失敗した場合はtemplate fallbackで評価します。
-            </p>
-          ) : (
-            <p className="mt-2 text-xs text-neutral-500">
-              Deterministic modeはCI向けの安定した評価です。Geminiを呼ばずにtemplate fallbackで評価します。
-            </p>
-          )}
+          <p className="mt-2 text-xs text-neutral-500">
+            {evalModeDescription(mode)}
+          </p>
           {errorMessage ? (
             <p className="mt-2 text-sm text-red-700">{errorMessage}</p>
           ) : null}

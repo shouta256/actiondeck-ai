@@ -20,6 +20,19 @@ def test_graph_workflow_skips_retrieval_and_planning_for_ignore_route():
     ]
 
 
+def test_graph_workflow_skips_retrieval_and_planning_for_missing_info_route():
+    result = _run_graph_workflow_for_inbox("inbox_003")
+
+    assert result.route == AgentRoute.MISSING_INFO
+    assert result.action_card.id == "action_003"
+    assert result.generation_mode == AgentRunGenerationMode.DETERMINISTIC_TEMPLATE
+    assert result.fallback_reason == "Graph route skipped planning for missing_info"
+    assert [step.step_name for step in result.agent_steps] == [
+        AgentStepName.TRIAGE,
+        AgentStepName.SAFETY_CHECK,
+    ]
+
+
 def test_graph_workflow_runs_full_path_for_review_required_route():
     result = _run_graph_workflow_for_inbox("inbox_001")
 

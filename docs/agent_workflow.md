@@ -2,11 +2,11 @@
 
 Agent Workflowは、Inbox ItemからAction Cardを生成する処理です。
 
-MVP時点ではLangGraphは未使用で、`apps/api/app/agents` に小さなPython workflowとして実装しています。理由は、まずAgentの責務境界を明確にし、画面・DB・評価までつながる縦スライスを完成させるためです。
+MVPではまずAgentの責務境界を明確にするため、`apps/api/app/agents` に小さなPython workflowを実装しました。これにより、画面・DB・評価までつながる縦スライスを先に完成させています。
 
-Phase 2では、この線形workflowをLangGraphへ移行する予定です。単純置換ではなく、conditional edge (情報不足 / 低リスク / 高リスク)、fallback、approval gate、trace保持までを設計に含めます。
+Phase 2では、この線形workflowをLangGraphへ移行中です。単純置換ではなく、conditional edge (情報不足 / 低リスク / 高リスク)、fallback、approval gate、trace保持までを設計に含めます。
 
-最初の移行ステップとして、既存nodeをLangGraph上で実行する移行用runnerを追加しています。APIやEvaluationの標準経路はまだ既存のPython workflowを使いますが、LangGraph runner側では `ignore` routeだけ `retrieval` / `planning` をスキップして `safety` に進むconditional edgeを接続しています。
+最初の移行ステップとして、既存nodeをLangGraph上で実行する移行用runnerを追加しています。標準のAgent Run APIと `deterministic` / `gemini` 評価modeはまだ既存のPython workflowを使いますが、`graph` 評価modeではLangGraph runnerを実行できます。LangGraph runner側では `ignore` / `missing_info` routeで `retrieval` / `planning` をスキップして `safety` に進むconditional edgeを接続しています。
 
 ## 流れ
 
@@ -34,7 +34,7 @@ Action Card
 
 Phase 2移行前の準備として、Triageでは `route` も決めます。現時点では出力Action Cardを変えず、`missing_info`、`ignore`、`low_risk_todo`、`review_required`、`conflicting_evidence` のどれに進むべきかをTraceに残します。LangGraph移行時には、このrouteをconditional edgeへ置き換える想定です。
 
-移行用LangGraph runnerでは、まず `ignore` routeだけconditional edgeに接続しています。`ignore` の場合はTriage後に検索・生成を省略し、template Action CardをSafety Checkへ渡します。それ以外のrouteは従来どおり `retrieval`、`planning`、`safety` の順に進みます。
+移行用LangGraph runnerでは、まず `ignore` / `missing_info` routeをconditional edgeに接続しています。これらのrouteではTriage後に検索・生成を省略し、template Action CardをSafety Checkへ渡します。それ以外のrouteは従来どおり `retrieval`、`planning`、`safety` の順に進みます。
 
 ### Retrieval
 
@@ -67,11 +67,13 @@ Gemini APIを使ってAction Card JSONを生成します。
 
 ## Evaluation
 
-評価APIでは、評価ケースごとにAgent Workflowをdeterministic modeで実行します。
+評価APIでは、評価ケースごとにAgent Workflowを実行し、期待値と比較します。
 
 Geminiを毎回呼ぶ評価は出力が揺れやすく、CIにも向きません。そのためMVPでは、`GEMINI_API_KEY` を使わない設定でworkflowを動かし、Action Cardのactions、priority、approval_required、missing_info、required evidence、schema validation、各stepの完了状態を確認します。
 
-Phase 2では、LangGraph移行前に `route` も評価対象にします。これにより、既存workflow上で `missing_info`、`ignore`、`low_risk_todo`、`review_required`、`conflicting_evidence` の分岐意図が守られているかを確認できます。
+評価modeは3つあります。`deterministic` は既存Python workflowをGeminiなしで安定評価し、`gemini` は手動確認用にGemini生成も含めて評価します。`graph` はLangGraph runnerをGeminiなしで実行し、標準経路へ切り替える前に同じ評価ケースで回帰確認するためのmodeです。
+
+Phase 2では、LangGraph移行前に `route` も評価対象にします。これにより、既存workflowとLangGraph runnerの両方で `missing_info`、`ignore`、`low_risk_todo`、`review_required`、`conflicting_evidence` の分岐意図が守られているかを確認できます。
 
 ## 実装ファイル
 

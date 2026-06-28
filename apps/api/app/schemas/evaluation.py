@@ -10,6 +10,7 @@ from app.schemas.agent_route import AgentRoute
 class ActionCardEvalMode(StrEnum):
     DETERMINISTIC = "deterministic"
     GEMINI = "gemini"
+    GRAPH = "graph"
 
 
 class ActionCardEvalCase(BaseModel):
