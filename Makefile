@@ -45,6 +45,7 @@ web-build:
 
 api-check:
 	cd apps/api && GEMINI_API_KEY= uv run python -c "from fastapi.testclient import TestClient; from main import app; client = TestClient(app); response = client.post('/agent-runs', json={'inbox_item_id': 'inbox_001'}); body = response.json(); print(response.status_code, body['generation_mode'], body.get('fallback_reason'))"
+	cd apps/api && GEMINI_API_KEY= uv run pytest
 
 compose-check:
 	docker compose -f infra/docker-compose.yml config >/dev/null
