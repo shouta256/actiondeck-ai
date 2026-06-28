@@ -59,9 +59,64 @@ jobs:
         working-directory: apps/api
         run: uv sync --locked
 
-      - name: Import app
+      - name: Smoke test app
         working-directory: apps/api
-        run: uv run python -c "import asyncio; from main import app; from app.schemas import ActionCard, EvidenceItem, AgentTraceStep, ActionCardStatusUpdate, ReviewEvent, InboxItem, ActionCardEvalRunResult, AgentRunResult; from app.services.action_card_store import list_action_cards; from app.services.evidence_store import list_evidence_items; from app.services.agent_trace_store import list_agent_steps; from app.services.inbox_item_store import list_inbox_items, get_inbox_item; from app.services.evaluation_service import run_action_card_eval; from app.services.agent_run_service import run_agent_for_inbox_item; from app.services.agent_run_store import save_agent_run, list_agent_runs; cards = list_action_cards(); evidence = list_evidence_items(); steps = list_agent_steps(); inbox_items = list_inbox_items(); eval_result = run_action_card_eval(); agent_run = run_agent_for_inbox_item(get_inbox_item('inbox_001')); saved_run = asyncio.run(save_agent_run(agent_run)); agent_runs = asyncio.run(list_agent_runs('inbox_001')); print(app.title, ActionCard.__name__, len(cards), EvidenceItem.__name__, len(evidence), AgentTraceStep.__name__, len(steps), ActionCardStatusUpdate.__name__, ReviewEvent.__name__, InboxItem.__name__, len(inbox_items), ActionCardEvalRunResult.__name__, eval_result.passed_cases, AgentRunResult.__name__, saved_run.run_id, len(agent_runs))"
+        run: GEMINI_API_KEY= PYTHONPATH=. uv run python scripts/check_app_smoke.py
+
+      - name: Run agent eval
+        working-directory: apps/api
+        run: GEMINI_API_KEY= PYTHONPATH=. uv run python scripts/check_eval.py
+
+      - name: Test
+        working-directory: apps/api
+        run: GEMINI_API_KEY= uv run pytest
+
+  api-db:
+    name: API DB
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: apps/api/.python-version
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v8.2.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
+
+      - name: Install dependencies
+        working-directory: apps/api
+        run: uv sync --locked
+
+      - name: Start Postgres
+        run: docker compose -f infra/docker-compose.yml up -d
+
+      - name: Wait for Postgres
+        run: |
+          for i in {1..30}; do
+            if docker compose -f infra/docker-compose.yml exec -T postgres pg_isready -U actiondeck -d actiondeck_ai; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker compose -f infra/docker-compose.yml logs postgres
+          exit 1
+
+      - name: Check DB schema
+        working-directory: apps/api
+        run: PYTHONPATH=. uv run python scripts/check_db.py
+
+      - name: Seed DB
+        run: make db-seed
+
+      - name: Check pgvector retrieval
+        working-directory: apps/api
+        run: GEMINI_API_KEY= EMBEDDING_PROVIDER=local PYTHONPATH=. uv run python scripts/check_pgvector.py
 
   infra:
     name: Infra

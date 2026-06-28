@@ -185,10 +185,11 @@ make compose-check
 GitHub Actionsで、`main`へのpushとpull requestごとに最低限の確認を実行します。
 
 - Web: 依存関係のインストール、lint、production build
-- API: uvで依存関係を同期し、FastAPI appをimportできるか確認
+- API: uvで依存関係を同期し、app smoke test、deterministic/graph評価、pytestを実行
+- API DB: Docker ComposeでPostgreSQL + pgvectorを起動し、DB schema、seed、pgvector retrievalを確認
 - Infra: Docker Compose設定の構文確認
 
-MVPでは自動デプロイやcoverage gateは入れず、mainが壊れていないことを確認する軽いCIに留めます。
+MVPでは自動デプロイやcoverage gateは入れず、mainが壊れていないこと、Agent評価が通ること、DBありの検索基盤が動くことを確認するCIに留めます。
 
 ## ディレクトリ構成
 
