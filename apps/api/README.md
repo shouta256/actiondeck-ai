@@ -4,9 +4,9 @@ ActionDeck AIのバックエンドです。
 
 FastAPIでAction Card、Evidence、Agent Trace、Review Event、Agent Run、Evaluationを扱います。
 
-Agent Runでは現在、標準経路として `Triage -> Retrieval -> Planning -> Safety` のPython workflowを実行し、GeminiでAction Card JSONを生成します。Geminiが使えない場合やschema検証に失敗した場合は、deterministicなテンプレートにfallbackします。
+Agent Runでは現在、標準経路としてLangGraph runnerを実行します。基本経路は `Triage -> Retrieval -> Planning -> Safety` ですが、`ignore` / `missing_info` routeでは `Triage -> Safety` に短絡します。Geminiが使えない場合やschema検証に失敗した場合は、deterministicなテンプレートにfallbackします。
 
-Phase 2ではLangGraph runnerへの移行を進めています。`/eval/action-cards?mode=graph` では、`ignore` / `missing_info` routeを `triage -> safety` に短絡するLangGraph runnerを評価できます。
+`/eval/action-cards?mode=graph` では、標準Agent Runと同じLangGraph runnerを評価できます。`/eval/action-cards?mode=deterministic` はlegacy Python workflowの安定評価として残しています。
 
 ## 起動
 

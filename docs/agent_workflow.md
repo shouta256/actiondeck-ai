@@ -6,7 +6,7 @@ MVPではまずAgentの責務境界を明確にするため、`apps/api/app/agen
 
 Phase 2では、この線形workflowをLangGraphへ移行中です。単純置換ではなく、conditional edge (情報不足 / 低リスク / 高リスク)、fallback、approval gate、trace保持までを設計に含めます。
 
-最初の移行ステップとして、既存nodeをLangGraph上で実行する移行用runnerを追加しています。標準のAgent Run APIと `deterministic` / `gemini` 評価modeはまだ既存のPython workflowを使いますが、`graph` 評価modeではLangGraph runnerを実行できます。LangGraph runner側では `ignore` / `missing_info` routeで `retrieval` / `planning` をスキップして `safety` に進むconditional edgeを接続しています。
+最初の移行ステップとして、既存nodeをLangGraph上で実行するrunnerを追加しました。現在の標準Agent Run APIはLangGraph runnerを使います。LangGraph runner側では `ignore` / `missing_info` routeで `retrieval` / `planning` をスキップして `safety` に進むconditional edgeを接続しています。`deterministic` 評価modeではlegacy Python workflowを残し、Graph移行前後の比較に使えるようにしています。
 
 ## 流れ
 
@@ -34,7 +34,7 @@ Action Card
 
 Phase 2移行前の準備として、Triageでは `route` も決めます。現時点では出力Action Cardを変えず、`missing_info`、`ignore`、`low_risk_todo`、`review_required`、`conflicting_evidence` のどれに進むべきかをTraceに残します。LangGraph移行時には、このrouteをconditional edgeへ置き換える想定です。
 
-移行用LangGraph runnerでは、まず `ignore` / `missing_info` routeをconditional edgeに接続しています。これらのrouteではTriage後に検索・生成を省略し、template Action CardをSafety Checkへ渡します。それ以外のrouteは従来どおり `retrieval`、`planning`、`safety` の順に進みます。
+LangGraph runnerでは、まず `ignore` / `missing_info` routeをconditional edgeに接続しています。これらのrouteではTriage後に検索・生成を省略し、template Action CardをSafety Checkへ渡します。それ以外のrouteは従来どおり `retrieval`、`planning`、`safety` の順に進みます。
 
 ### Retrieval
 
@@ -71,7 +71,7 @@ Gemini APIを使ってAction Card JSONを生成します。
 
 Geminiを毎回呼ぶ評価は出力が揺れやすく、CIにも向きません。そのためMVPでは、`GEMINI_API_KEY` を使わない設定でworkflowを動かし、Action Cardのactions、priority、approval_required、missing_info、required evidence、schema validation、各stepの完了状態を確認します。
 
-評価modeは3つあります。`deterministic` は既存Python workflowをGeminiなしで安定評価し、`gemini` は手動確認用にGemini生成も含めて評価します。`graph` はLangGraph runnerをGeminiなしで実行し、標準経路へ切り替える前に同じ評価ケースで回帰確認するためのmodeです。
+評価modeは3つあります。`deterministic` はlegacy Python workflowをGeminiなしで安定評価し、`gemini` はlegacy Python workflowで手動確認用にGemini生成も含めて評価します。`graph` は標準Agent Runと同じLangGraph runnerをGeminiなしで実行し、同じ評価ケースで回帰確認するためのmodeです。
 
 Phase 2では、LangGraph移行前に `route` も評価対象にします。これにより、既存workflowとLangGraph runnerの両方で `missing_info`、`ignore`、`low_risk_todo`、`review_required`、`conflicting_evidence` の分岐意図が守られているかを確認できます。
 

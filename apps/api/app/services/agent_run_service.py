@@ -5,7 +5,7 @@ from app.schemas import (
     AgentRunResult,
     InboxItem,
 )
-from app.agents import run_agent_workflow
+from app.agents import run_agent_graph_workflow
 from app.services.action_card_store import list_action_cards
 from app.services.evidence_store import list_evidence_items
 from app.settings import get_settings
@@ -18,7 +18,7 @@ def run_agent_for_inbox_item(inbox_item: InboxItem) -> AgentRunResult | None:
 
     settings = get_settings()
     created_at = datetime.now(UTC)
-    workflow_result = run_agent_workflow(
+    workflow_result = run_agent_graph_workflow(
         inbox_item=inbox_item,
         template_action_card=template_action_card,
         evidence_items=list_evidence_items(),

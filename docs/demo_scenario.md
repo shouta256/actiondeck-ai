@@ -65,4 +65,4 @@ Safety Check
 - Agent出力はPydantic schemaで検証します
 - 根拠とTraceを表示し、AIの判断を後から確認できます
 - 外部アクションは自動実行せず、Human-in-the-loopで止めます
-- deterministic評価、Graph評価、Gemini評価を分け、安定確認、移行確認、LLM品質確認を分離しています
+- deterministic評価、Graph評価、Gemini評価を分け、legacy比較、標準Graph経路の確認、LLM品質確認を分離しています
