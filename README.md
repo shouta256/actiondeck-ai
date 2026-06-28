@@ -84,7 +84,12 @@ Geminiを使う場合は、`apps/api/.env.example` を参考に `apps/api/.env` 
 ```bash
 GEMINI_API_KEY=your_api_key_here
 GEMINI_MODEL=gemini-3.1-flash-lite
+EMBEDDING_PROVIDER=local
+GEMINI_EMBEDDING_MODEL=gemini-embedding-2
+EMBEDDING_DIMENSIONS=768
 ```
+
+Gemini Embeddingを使う場合は `EMBEDDING_PROVIDER=gemini` にします。APIキー未設定、またはEmbedding API呼び出しに失敗した場合はlocal deterministic embeddingへfallbackします。
 
 ## Demo Flow
 
@@ -156,6 +161,8 @@ Evidenceをpgvector用テーブルへseedする場合:
 make db-seed
 ```
 
+`EMBEDDING_DIMENSIONS` を変えた場合や、既存DBが古い `vector(32)` の場合は、`make db-reset` でDBを作り直してください。
+
 ## 開発チェック
 
 ```bash
@@ -199,11 +206,11 @@ infra/        # ローカルインフラ設定
 - Gmail、LINE、Calendarなどの本番OAuth連携
 - 実行アクションの自動送信・自動登録
 - legacy Python workflowの完全削除
-- 外部Embedding APIを使った本格的なRAG検索
+- 外部Embedding APIの品質比較と運用設計
 - 本番デプロイと認証
 
 MVPでは、外部連携の配管よりも「入力から根拠付きAction Cardを作り、ユーザーが承認できる」縦スライスの完成を優先しています。
 
-これらはMVPで「やらない」と決めたものですが、Phase 2では順番を設計して取り込みます。確定順序は、評価ケース拡充 → LangGraph移行 → pgvector → Calendar read-only OAuth → (条件付き)Go sync worker → (最後)Gmail OAuth です。評価ケースは12件まで拡充済みで、pgvectorの最小導入も完了しています。次は検索品質評価を厚くするか、Calendar read-only OAuthへ進む想定です。
+これらはMVPで「やらない」と決めたものですが、Phase 2では順番を設計して取り込みます。確定順序は、評価ケース拡充 → LangGraph移行 → pgvector → Calendar read-only OAuth → (条件付き)Go sync worker → (最後)Gmail OAuth です。評価ケースは12件まで拡充済みで、pgvectorの最小導入とGemini Embedding切り替え設定も完了しています。次は検索品質比較を厚くするか、Calendar read-only OAuthへ進む想定です。
 
 Action Card schemaは [docs/action_card_schema.md](docs/action_card_schema.md) に整理しています。

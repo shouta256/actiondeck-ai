@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS evidence_items (
   relevance_score double precision NOT NULL,
   used_for text NOT NULL,
   chunk_id text NOT NULL,
-  embedding vector(32) NOT NULL
+  embedding vector(768) NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_evidence_items_embedding

@@ -48,7 +48,7 @@ LangGraph runnerでは、まず `ignore` / `missing_info` routeをconditional ed
 
 Action Cardの根拠になるEvidenceを選びます。
 
-MVPでは `data/seed/evidence_items.json` のseed evidenceをPostgreSQLの `evidence_items` テーブルへ投入し、`embedding vector(32)` をpgvectorでtop-k検索します。embeddingは外部APIではなく、ローカルの決定的なhash embeddingで生成します。これは検索基盤の構造を先に作り、APIキーなしでも評価とデモが壊れないようにするためです。
+MVPでは `data/seed/evidence_items.json` のseed evidenceをPostgreSQLの `evidence_items` テーブルへ投入し、`embedding vector(768)` をpgvectorでtop-k検索します。embeddingは `EMBEDDING_PROVIDER=gemini` の場合にGemini Embeddingを使い、APIキー未設定やAPI失敗時はローカルの決定的なhash embeddingへfallbackします。これは検索基盤の構造を保ちつつ、APIキーなしでも評価とデモが壊れないようにするためです。
 
 DB未起動、未seed、pgvector検索失敗時は、従来のseed evidenceに対する簡易スコアリングへfallbackします。Evaluationでは、最終Action Cardの `evidence_ids` だけでなく、Retrieval nodeが実際に取得したEvidence IDもrequired evidenceと比較します。
 
