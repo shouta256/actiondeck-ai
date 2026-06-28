@@ -3,6 +3,7 @@ import type {
   ActionKind,
   Priority,
 } from "@/features/action-cards/types";
+import type { AgentStepName } from "@/features/agent-trace/types";
 
 export type ActionCardEvalMode = "deterministic" | "gemini" | "graph";
 export type AgentRoute =
@@ -22,6 +23,7 @@ export type ActionCardEvalCaseResult = {
   missing_info_match: boolean;
   generation_mode_match: boolean;
   route_match: boolean;
+  step_path_match: boolean;
   unsafe_action_count_match: boolean;
   required_evidence_covered: boolean;
   schema_valid: boolean;
@@ -42,6 +44,8 @@ export type ActionCardEvalCaseResult = {
   fallback_reason?: string | null;
   expected_route?: AgentRoute | null;
   actual_route?: AgentRoute | null;
+  expected_step_names: AgentStepName[];
+  actual_step_names: AgentStepName[];
   expected_unsafe_action_count: number;
   actual_unsafe_action_count: number;
   failure_reasons: string[];
@@ -61,6 +65,7 @@ export type ActionCardEvalRunResult = {
   missing_info_match_rate: number;
   generation_mode_match_rate: number;
   route_match_rate: number;
+  step_path_match_rate: number;
   unsafe_action_match_rate: number;
   schema_valid_rate: number;
   evidence_recall: number;

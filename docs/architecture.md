@@ -41,7 +41,7 @@ MVPでは、まず処理の境界を明確にするため、`apps/api/app/agents
 - Agent RunはLangGraph runner、Gemini生成、deterministic fallback、approval gateを実装済み
 - Agent Run結果はPostgreSQLに保存する。接続できない場合は開発用にメモリ保存へfallbackする
 - WebではAction Card詳細、Evidence、Trace、Review、Agent Run結果を表示する
-- Evaluation画面で `deterministic` / `graph` / `gemini` modeを切り替え、評価ケースの期待値と比較する
+- Evaluation画面で `deterministic` / `graph` / `gemini` modeを切り替え、評価ケースの期待値、route、Graph step pathと比較する
 
 ## Phase 2の拡張方針 (確定順序)
 

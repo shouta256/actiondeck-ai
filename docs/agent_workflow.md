@@ -88,7 +88,7 @@ Geminiを毎回呼ぶ評価は出力が揺れやすく、CIにも向きません
 
 評価modeは3つあります。`deterministic` はlegacy Python workflowをGeminiなしで安定評価し、`gemini` はlegacy Python workflowで手動確認用にGemini生成も含めて評価します。`graph` は標準Agent Runと同じLangGraph runnerをGeminiなしで実行し、同じ評価ケースで回帰確認するためのmodeです。
 
-Phase 2では、LangGraph移行前に `route` も評価対象にします。これにより、既存workflowとLangGraph runnerの両方で `missing_info`、`ignore`、`low_risk_todo`、`review_required`、`conflicting_evidence` の分岐意図が守られているかを確認できます。
+Phase 2では、LangGraph移行前に `route` も評価対象にしました。さらにGraph modeでは `expected_step_names` と実際のTrace step順を比較し、`missing_info`、`ignore`、`low_risk_todo`、`review_required`、`conflicting_evidence` が期待したworkflow pathを通ったかを確認します。deterministic / gemini modeはlegacy workflowの安定評価を壊さないため、step pathはGraph modeで検証します。
 
 ## 実装ファイル
 

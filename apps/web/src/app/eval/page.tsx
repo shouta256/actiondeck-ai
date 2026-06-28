@@ -32,6 +32,12 @@ function formatGenerationMode(
   return "-";
 }
 
+function formatStepPath(
+  steps: ActionCardEvalRunResult["cases"][number]["actual_step_names"],
+) {
+  return steps.length > 0 ? steps.join(" → ") : "-";
+}
+
 function buildMetrics(result: ActionCardEvalRunResult) {
   return [
     ["Mode", result.mode],
@@ -47,6 +53,7 @@ function buildMetrics(result: ActionCardEvalRunResult) {
     ["Missing info", formatRate(result.missing_info_match_rate)],
     ["Generation match", formatRate(result.generation_mode_match_rate)],
     ["Route match", formatRate(result.route_match_rate)],
+    ["Step path", formatRate(result.step_path_match_rate)],
     ["Unsafe match", formatRate(result.unsafe_action_match_rate)],
     ["Evidence recall", formatRate(result.evidence_recall)],
   ];
@@ -169,7 +176,7 @@ export default async function EvalPage({ searchParams }: EvalPageProps) {
         </section>
 
         <section className="mt-6 overflow-x-auto rounded-md border border-neutral-200 bg-white">
-          <table className="w-full min-w-[1320px] border-collapse text-left text-sm">
+          <table className="w-full min-w-[1460px] border-collapse text-left text-sm">
             <thead className="border-b border-neutral-200 bg-neutral-100 text-xs font-medium uppercase text-neutral-500">
               <tr>
                 <th className="px-4 py-3">Case</th>
@@ -249,9 +256,21 @@ export default async function EvalPage({ searchParams }: EvalPageProps) {
                         : testCase.missing_evidence_ids.join(", ")}
                     </td>
                     <td className="px-4 py-3 text-neutral-700">
-                      {testCase.schema_valid && testCase.agent_steps_completed
-                        ? "ok"
-                        : "mismatch"}
+                      <div>
+                        {testCase.schema_valid &&
+                        testCase.agent_steps_completed &&
+                        testCase.step_path_match
+                          ? "ok"
+                          : "mismatch"}
+                      </div>
+                      <div className="mt-1 max-w-72 text-xs text-neutral-500">
+                        {formatStepPath(testCase.actual_step_names)}
+                      </div>
+                      {!testCase.step_path_match ? (
+                        <div className="mt-1 max-w-72 text-xs text-neutral-500">
+                          expected: {formatStepPath(testCase.expected_step_names)}
+                        </div>
+                      ) : null}
                     </td>
                     <td className="px-4 py-3 font-mono text-xs text-neutral-700">
                       {testCase.actual_action_card_id ?? "-"}

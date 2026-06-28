@@ -56,6 +56,7 @@ def run_action_card_eval(
             template_action_card=template_action_cards_by_source.get(
                 case.input_item_id
             ),
+            mode=mode,
             settings=settings,
             workflow_runner=workflow_runner,
         )
@@ -86,6 +87,7 @@ def run_action_card_eval(
         1 for result in case_results if result.generation_mode_match
     )
     route_matches = sum(1 for result in case_results if result.route_match)
+    step_path_matches = sum(1 for result in case_results if result.step_path_match)
     unsafe_action_matches = sum(
         1 for result in case_results if result.unsafe_action_count_match
     )
@@ -112,6 +114,7 @@ def run_action_card_eval(
         missing_info_match_rate=_safe_rate(missing_info_matches, total_cases),
         generation_mode_match_rate=_safe_rate(generation_mode_matches, total_cases),
         route_match_rate=_safe_rate(route_matches, total_cases),
+        step_path_match_rate=_safe_rate(step_path_matches, total_cases),
         unsafe_action_match_rate=_safe_rate(unsafe_action_matches, total_cases),
         schema_valid_rate=_safe_rate(schema_valid_results, total_cases),
         evidence_recall=_safe_rate(covered_evidence_count, required_evidence_count),
@@ -137,6 +140,7 @@ def _workflow_runner_for_eval_mode(
 def _evaluate_case(
     case: ActionCardEvalCase,
     template_action_card: ActionCard | None,
+    mode: ActionCardEvalMode,
     settings,
     workflow_runner: Callable[..., AgentWorkflowResult],
 ) -> ActionCardEvalCaseResult:
@@ -182,6 +186,16 @@ def _evaluate_case(
     )
     actual_route = workflow_result.route if workflow_result else None
     route_match = case.expected_route is None or actual_route == case.expected_route
+    actual_step_names = (
+        [step.step_name for step in workflow_result.agent_steps]
+        if workflow_result
+        else []
+    )
+    step_path_match = (
+        mode != ActionCardEvalMode.GRAPH
+        or not case.expected_step_names
+        or actual_step_names == case.expected_step_names
+    )
     actual_unsafe_action_count = _count_unsafe_actions(action_card)
     unsafe_action_count_match = (
         actual_unsafe_action_count == case.expected_unsafe_action_count
@@ -196,6 +210,7 @@ def _evaluate_case(
         missing_info_match=missing_info_match,
         generation_mode_match=generation_mode_match,
         route_match=route_match,
+        step_path_match=step_path_match,
         unsafe_action_count_match=unsafe_action_count_match,
         required_evidence_covered=required_evidence_covered,
         agent_steps_completed=agent_steps_completed,
@@ -208,6 +223,7 @@ def _evaluate_case(
         and missing_info_match
         and generation_mode_match
         and route_match
+        and step_path_match
         and unsafe_action_count_match
         and required_evidence_covered
         and agent_steps_completed
@@ -223,6 +239,7 @@ def _evaluate_case(
         missing_info_match=missing_info_match,
         generation_mode_match=generation_mode_match,
         route_match=route_match,
+        step_path_match=step_path_match,
         unsafe_action_count_match=unsafe_action_count_match,
         required_evidence_covered=required_evidence_covered,
         schema_valid=schema_valid,
@@ -245,6 +262,8 @@ def _evaluate_case(
         fallback_reason=workflow_result.fallback_reason if workflow_result else None,
         expected_route=case.expected_route,
         actual_route=actual_route,
+        expected_step_names=case.expected_step_names,
+        actual_step_names=actual_step_names,
         expected_unsafe_action_count=case.expected_unsafe_action_count,
         actual_unsafe_action_count=actual_unsafe_action_count,
         failure_reasons=failure_reasons,
@@ -289,6 +308,7 @@ def _build_failure_reasons(
     missing_info_match: bool,
     generation_mode_match: bool,
     route_match: bool,
+    step_path_match: bool,
     unsafe_action_count_match: bool,
     required_evidence_covered: bool,
     agent_steps_completed: bool,
@@ -312,6 +332,8 @@ def _build_failure_reasons(
         reasons.append("generation_mode did not match expected value")
     if not route_match:
         reasons.append("route did not match expected value")
+    if not step_path_match:
+        reasons.append("step path did not match expected workflow path")
     if not unsafe_action_count_match:
         reasons.append("unsafe_action_count did not match expected value")
     if not required_evidence_covered:

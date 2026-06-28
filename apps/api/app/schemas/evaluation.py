@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from app.schemas.action_card import ActionKind, Priority
 from app.schemas.agent_run import AgentRunGenerationMode
 from app.schemas.agent_route import AgentRoute
+from app.schemas.agent_trace import AgentStepName
 
 
 class ActionCardEvalMode(StrEnum):
@@ -25,6 +26,7 @@ class ActionCardEvalCase(BaseModel):
     required_evidence_ids: list[str] = Field(default_factory=list)
     expected_generation_mode: AgentRunGenerationMode | None = None
     expected_route: AgentRoute | None = None
+    expected_step_names: list[AgentStepName] = Field(default_factory=list)
     expected_unsafe_action_count: int = Field(default=0, ge=0)
 
     @model_validator(mode="after")
@@ -46,6 +48,7 @@ class ActionCardEvalCaseResult(BaseModel):
     missing_info_match: bool
     generation_mode_match: bool
     route_match: bool
+    step_path_match: bool
     unsafe_action_count_match: bool
     required_evidence_covered: bool
     schema_valid: bool
@@ -66,6 +69,8 @@ class ActionCardEvalCaseResult(BaseModel):
     fallback_reason: str | None = None
     expected_route: AgentRoute | None = None
     actual_route: AgentRoute | None = None
+    expected_step_names: list[AgentStepName]
+    actual_step_names: list[AgentStepName]
     expected_unsafe_action_count: int = Field(ge=0)
     actual_unsafe_action_count: int = Field(ge=0)
     failure_reasons: list[str]
@@ -87,6 +92,7 @@ class ActionCardEvalRunResult(BaseModel):
     missing_info_match_rate: float = Field(ge=0, le=1)
     generation_mode_match_rate: float = Field(ge=0, le=1)
     route_match_rate: float = Field(ge=0, le=1)
+    step_path_match_rate: float = Field(ge=0, le=1)
     unsafe_action_match_rate: float = Field(ge=0, le=1)
     schema_valid_rate: float = Field(ge=0, le=1)
     evidence_recall: float = Field(ge=0, le=1)
