@@ -22,6 +22,7 @@ from app.schemas import (
     EvidenceItem,
     InboxItem,
 )
+from app.schemas.agent_route import AgentRoute
 from app.settings import Settings
 
 
@@ -82,13 +83,26 @@ def _build_graph():
     graph_builder.add_node("triage", _node_runner(triage))
     graph_builder.add_node("retrieval", _node_runner(retrieve_evidence))
     graph_builder.add_node("planning", _node_runner(plan_action_card))
-    graph_builder.add_node("safety", _node_runner(check_safety))
+    graph_builder.add_node("safety", _safety_node_runner())
     graph_builder.add_edge(START, "triage")
-    graph_builder.add_edge("triage", "retrieval")
+    graph_builder.add_conditional_edges(
+        "triage",
+        _next_after_triage,
+        {
+            "continue": "retrieval",
+            "skip_to_safety": "safety",
+        },
+    )
     graph_builder.add_edge("retrieval", "planning")
     graph_builder.add_edge("planning", "safety")
     graph_builder.add_edge("safety", END)
     return graph_builder.compile()
+
+
+def _next_after_triage(graph_state: GraphWorkflowState) -> str:
+    if graph_state["agent_state"].route == AgentRoute.IGNORE:
+        return "skip_to_safety"
+    return "continue"
 
 
 def _node_runner(node):
@@ -101,3 +115,20 @@ def _node_runner(node):
         )
 
     return run_node
+
+
+def _safety_node_runner():
+    def run_safety_node(graph_state: GraphWorkflowState) -> GraphWorkflowState:
+        agent_state = graph_state["agent_state"]
+        if agent_state.action_card is None:
+            agent_state.action_card = agent_state.template_action_card
+            agent_state.generation_mode = AgentRunGenerationMode.DETERMINISTIC_TEMPLATE
+            agent_state.fallback_reason = "Graph route skipped planning for ignore"
+
+        node_result = _run_node(agent_state, check_safety)
+        return GraphWorkflowState(
+            agent_state=agent_state,
+            node_results=[*graph_state["node_results"], node_result],
+        )
+
+    return run_safety_node
