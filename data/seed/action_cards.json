@@ -152,5 +152,41 @@
     "evidence_ids": ["ev_007", "ev_008"],
     "missing_info": ["2026年7月6日 10:00-10:30に面談対応できるか確認が必要です"],
     "safety_notes": ["根拠が矛盾しているため、返信案や予定案を確定しません"]
+  },
+  {
+    "schema_version": "1.0",
+    "id": "action_008",
+    "source_item_id": "inbox_008",
+    "title": "書類確認への返信",
+    "actions": ["draft_reply"],
+    "priority": "high",
+    "risk_level": "medium",
+    "confidence": 0.8,
+    "approval_required": true,
+    "status": "pending_review",
+    "summary": "確認済みであることを採用担当へ簡潔に返信する。",
+    "proposal": {
+      "reply_draft": "ご連絡ありがとうございます。ポートフォリオ資料の内容に問題ありません。確認済みです。"
+    },
+    "evidence_ids": ["ev_009"],
+    "missing_info": [],
+    "safety_notes": ["メール返信はユーザー承認が必要です"]
+  },
+  {
+    "schema_version": "1.0",
+    "id": "action_009",
+    "source_item_id": "inbox_009",
+    "title": "最終面談候補日時の確認",
+    "actions": ["request_missing_info"],
+    "priority": "high",
+    "risk_level": "medium",
+    "confidence": 0.74,
+    "approval_required": false,
+    "status": "draft",
+    "summary": "最終面談の重要度は高いが、候補日時が不足しているため先に候補日時を確認する。",
+    "proposal": {},
+    "evidence_ids": ["ev_010"],
+    "missing_info": ["最終面談の候補日時が不足しています"],
+    "safety_notes": ["候補日時がないため、返信案や予定案は作成しません"]
   }
 ]

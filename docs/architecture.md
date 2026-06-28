@@ -47,7 +47,7 @@ MVPでは、まず処理の境界を明確にするため、`apps/api/app/agents
 
 MVPの縦スライスを保ったまま、以下の順番で拡張する。
 
-1. 評価ケース拡充 (10〜12件)
+1. 評価ケース拡充 (10件まで実装済み。次は12件まで増やす)
 2. Python workflowをLangGraphへ移行する (標準Agent RunはGraphへ切り替え済み。approval gate、terminal route、conflicting evidence route、低リスクToDo routeもGraph上に表現済み)
 3. seed evidence検索をpgvector検索へ置き換える (lexical fallbackは残す)
 4. Calendar read-only OAuthを追加する (予定作成はせず、衝突検知と提案に留める)

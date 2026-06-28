@@ -78,5 +78,25 @@
     "relevance_score": 0.89,
     "used_for": "schedule_risk",
     "chunk_id": "chunk_note_003"
+  },
+  {
+    "id": "ev_009",
+    "source_type": "personal_note",
+    "source_id": "note_004",
+    "title": "書類確認返信ルール",
+    "snippet": "採用担当から確認済みの返信を求められた場合は、24時間以内に簡潔に返信する。",
+    "relevance_score": 0.87,
+    "used_for": "priority",
+    "chunk_id": "chunk_note_004"
+  },
+  {
+    "id": "ev_010",
+    "source_type": "personal_note",
+    "source_id": "note_005",
+    "title": "最終面談の日程確認ルール",
+    "snippet": "最終面談など重要度が高い日程調整でも候補日時がない場合は、先に候補日時を確認する。",
+    "relevance_score": 0.9,
+    "used_for": "missing_info",
+    "chunk_id": "chunk_note_005"
   }
 ]

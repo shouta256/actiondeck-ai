@@ -61,5 +61,23 @@
     "subject": "面談候補日の確認",
     "received_at": "2026-06-27T15:30:00",
     "body": "鈴木様\n\n次回面談について、2026年7月6日 10:00-10:30はいかがでしょうか。\nご都合をお知らせください。"
+  },
+  {
+    "id": "inbox_008",
+    "channel": "email",
+    "sender_name": "LINEヤフー 採用担当",
+    "sender_address": "recruit@example.com",
+    "subject": "書類確認への返信依頼",
+    "received_at": "2026-06-28T09:10:00",
+    "body": "鈴木様\n\n提出いただいたポートフォリオ資料を確認しました。\n内容に問題がなければ、確認済みの旨だけ返信をお願いします。"
+  },
+  {
+    "id": "inbox_009",
+    "channel": "email",
+    "sender_name": "LINEヤフー 採用担当",
+    "sender_address": "recruit@example.com",
+    "subject": "最終面談の日程調整",
+    "received_at": "2026-06-28T10:20:00",
+    "body": "鈴木様\n\n最終面談を早めに設定したいです。\n今週中でご都合のよい時間を教えてください。"
   }
 ]
