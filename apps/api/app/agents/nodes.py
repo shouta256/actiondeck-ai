@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass, field
 
 from app.agents.state import AgentState
@@ -12,6 +13,7 @@ from app.schemas import (
     RiskLevel,
 )
 from app.schemas.agent_route import AgentRoute
+from app.services.evidence_vector_store import search_evidence_with_pgvector
 from app.services.gemini_client import generate_action_card_with_gemini
 
 
@@ -56,19 +58,36 @@ def triage(state: AgentState) -> AgentNodeResult:
 
 
 def retrieve_evidence(state: AgentState) -> AgentNodeResult:
-    scored_items = [
-        (item, _score_evidence_item(state, item))
-        for item in state.all_evidence_items
-    ]
-    retrieved_items = tuple(
-        item
-        for item, score in sorted(
-            scored_items,
-            key=lambda pair: (pair[1], pair[0].relevance_score),
-            reverse=True,
+    query_text = _evidence_query_text(state)
+    vector_search_result = search_evidence_with_pgvector(
+        query_text=query_text,
+        limit=12,
+    )
+    if vector_search_result.evidence_items:
+        retrieved_items = _rank_evidence_items(
+            state,
+            vector_search_result.evidence_items,
+        )[:3]
+        state.retrieved_evidence_items = retrieved_items
+        evidence_ids = [item.id for item in retrieved_items]
+        return AgentNodeResult(
+            step_name=AgentStepName.EVIDENCE_RETRIEVAL,
+            status=AgentStepStatus.COMPLETED,
+            input_summary="Searched Postgres pgvector evidence index.",
+            output_summary=f"Retrieved evidence: {', '.join(evidence_ids)}.",
+            tool_calls=[
+                AgentToolCall(
+                    name="pgvector_evidence_search",
+                    input_summary=(
+                        "Local deterministic embedding + vector candidates "
+                        "with route-aware reranking."
+                    ),
+                    output_summary=f"{len(retrieved_items)} evidence items selected.",
+                )
+            ],
         )
-        if score > 0
-    )[:3]
+
+    retrieved_items = _rank_evidence_items(state, state.all_evidence_items)[:3]
     state.retrieved_evidence_items = retrieved_items
 
     evidence_ids = [item.id for item in retrieved_items]
@@ -84,7 +103,10 @@ def retrieve_evidence(state: AgentState) -> AgentNodeResult:
         tool_calls=[
             AgentToolCall(
                 name="seed_evidence_search",
-                input_summary="Keyword scoring over local seed evidence.",
+                input_summary=(
+                    "Keyword scoring over local seed evidence. "
+                    f"pgvector fallback: {vector_search_result.fallback_reason}."
+                ),
                 output_summary=f"{len(retrieved_items)} evidence items selected.",
             )
         ],
@@ -204,8 +226,27 @@ def approval_gate(state: AgentState) -> AgentNodeResult:
     )
 
 
+def _rank_evidence_items(
+    state: AgentState,
+    evidence_items: tuple[EvidenceItem, ...],
+) -> tuple[EvidenceItem, ...]:
+    scored_items = [
+        (item, _score_evidence_item(state, item))
+        for item in evidence_items
+    ]
+    return tuple(
+        item
+        for item, score in sorted(
+            scored_items,
+            key=lambda pair: (pair[1], pair[0].relevance_score),
+            reverse=True,
+        )
+        if score > 0
+    )
+
+
 def _score_evidence_item(state: AgentState, evidence_item: EvidenceItem) -> float:
-    text = _inbox_text(state)
+    text = _evidence_query_text(state).lower()
     score = 0.0
     if evidence_item.source_type == EvidenceSourceType.INBOX_ITEM:
         score += 0.3
@@ -213,17 +254,25 @@ def _score_evidence_item(state: AgentState, evidence_item: EvidenceItem) -> floa
         "requires_reply",
         False,
     ):
-        score += 0.6
+        score += 1.0
     if evidence_item.used_for == "schedule_risk" and state.triage_signals.get(
         "has_schedule",
         False,
     ):
         score += 0.6
     if evidence_item.used_for == "todo" and state.triage_signals.get("has_todo", False):
-        score += 0.6
+        todo_weight = (
+            0.9
+            if _contains_any(text, ("提出物", "締切", "期限", "資料", "ポートフォリオ"))
+            else 0.2
+        )
+        score += todo_weight
 
     evidence_text = f"{evidence_item.title}\n{evidence_item.snippet}".lower()
-    for keyword in ("面談", "候補", "提出物", "確認", "返信", "締切", "期限"):
+    if _extract_date_keys(text) & _extract_date_keys(evidence_text):
+        score += 0.7
+
+    for keyword in ("面談", "候補", "提出物", "確認", "返信", "締切", "期限", "第一志望"):
         if keyword in text and keyword in evidence_text:
             score += 0.2
 
@@ -254,5 +303,30 @@ def _inbox_text(state: AgentState) -> str:
     return f"{state.inbox_item.subject}\n{state.inbox_item.body}".lower()
 
 
+def _evidence_query_text(state: AgentState) -> str:
+    hints = []
+    if "lineヤフー" in _inbox_text(state):
+        hints.append("第一志望")
+    if (
+        state.triage_signals.get("requires_reply", False)
+        and state.route != AgentRoute.CONFLICTING_EVIDENCE
+    ):
+        hints.append("priority 返信 返信方針")
+    if state.triage_signals.get("has_schedule", False):
+        hints.append("schedule_risk 予定 衝突 候補日時")
+    if state.triage_signals.get("has_todo", False):
+        hints.append("todo create_todo 確認")
+    if state.route == AgentRoute.MISSING_INFO:
+        hints.append("missing_info 不足 曖昧")
+    return "\n".join((_inbox_text(state), *hints))
+
+
 def _contains_any(text: str, keywords: tuple[str, ...]) -> bool:
     return any(keyword in text for keyword in keywords)
+
+
+def _extract_date_keys(text: str) -> set[str]:
+    date_keys = set(re.findall(r"20\d{2}-\d{2}-\d{2}", text))
+    for year, month, day in re.findall(r"(20\d{2})年(\d{1,2})月(\d{1,2})日", text):
+        date_keys.add(f"{year}-{int(month):02d}-{int(day):02d}")
+    return date_keys

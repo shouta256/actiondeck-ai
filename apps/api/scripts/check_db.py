@@ -10,6 +10,10 @@ async def main() -> None:
     try:
         table_name = await connection.fetchval("select to_regclass('public.agent_runs')")
         print(f"agent_runs: {table_name}")
+        evidence_table_name = await connection.fetchval(
+            "select to_regclass('public.evidence_items')"
+        )
+        print(f"evidence_items: {evidence_table_name}")
     finally:
         await connection.close()
 

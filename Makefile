@@ -1,12 +1,13 @@
 SHELL := /bin/bash
 
-.PHONY: setup up api web db-up db-down db-reset db-check check api-check web-lint web-build compose-check
+.PHONY: setup up api web db-up db-down db-reset db-check db-seed check api-check web-lint web-build compose-check
 
 setup:
 	npm --prefix apps/web install
 	cd apps/api && uv sync
 	$(MAKE) db-up
 	$(MAKE) db-check
+	$(MAKE) db-seed
 
 up:
 	@echo "Starting API and web. Stop with Ctrl+C."
@@ -31,9 +32,13 @@ db-reset:
 	docker compose -f infra/docker-compose.yml down -v
 	docker compose -f infra/docker-compose.yml up -d
 	$(MAKE) db-check
+	$(MAKE) db-seed
 
 db-check:
 	cd apps/api && PYTHONPATH=. uv run python scripts/check_db.py
+
+db-seed:
+	cd apps/api && PYTHONPATH=. uv run python scripts/seed_evidence_vectors.py
 
 check: web-lint web-build api-check compose-check
 
