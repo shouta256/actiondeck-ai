@@ -103,7 +103,14 @@ def _build_graph():
             "skip_to_safety": "safety",
         },
     )
-    graph_builder.add_edge("retrieval", "planning")
+    graph_builder.add_conditional_edges(
+        "retrieval",
+        _next_after_retrieval,
+        {
+            "continue": "planning",
+            "skip_to_safety": "safety",
+        },
+    )
     graph_builder.add_edge("planning", "safety")
     graph_builder.add_edge("safety", "approval_gate")
     graph_builder.add_edge("approval_gate", END)
@@ -112,6 +119,12 @@ def _build_graph():
 
 def _next_after_triage(graph_state: GraphWorkflowState) -> str:
     if graph_state["agent_state"].route in TERMINAL_TRIAGE_ROUTES:
+        return "skip_to_safety"
+    return "continue"
+
+
+def _next_after_retrieval(graph_state: GraphWorkflowState) -> str:
+    if graph_state["agent_state"].route == AgentRoute.CONFLICTING_EVIDENCE:
         return "skip_to_safety"
     return "continue"
 

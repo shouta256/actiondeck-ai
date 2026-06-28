@@ -51,6 +51,24 @@ def test_graph_workflow_runs_full_path_for_review_required_route():
     ]
 
 
+def test_graph_workflow_skips_planning_for_conflicting_evidence_route():
+    result = _run_graph_workflow_for_inbox("inbox_007")
+
+    assert result.route == AgentRoute.CONFLICTING_EVIDENCE
+    assert result.action_card.id == "action_007"
+    assert result.generation_mode == AgentRunGenerationMode.DETERMINISTIC_TEMPLATE
+    assert (
+        result.fallback_reason
+        == "Graph route skipped planning for conflicting_evidence"
+    )
+    assert [step.step_name for step in result.agent_steps] == [
+        AgentStepName.TRIAGE,
+        AgentStepName.EVIDENCE_RETRIEVAL,
+        AgentStepName.SAFETY_CHECK,
+        AgentStepName.APPROVAL_GATE,
+    ]
+
+
 def _run_graph_workflow_for_inbox(inbox_item_id: str):
     inbox_item = get_inbox_item(inbox_item_id)
     assert inbox_item is not None
