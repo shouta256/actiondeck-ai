@@ -19,7 +19,7 @@ review_required
 
 Geminiが使えない場合やschema検証に失敗した場合は、deterministicなテンプレートにfallbackします。
 
-`/eval/action-cards?mode=graph` では、標準Agent Runと同じLangGraph runnerを評価できます。Graph modeではrouteだけでなく、期待したstep pathを通ったかも確認します。`/eval/action-cards?mode=deterministic` はlegacy Python workflowの安定評価として残しています。
+`/eval/action-cards?mode=graph` では、標準Agent Runと同じLangGraph runnerを評価できます。Graph modeではrouteだけでなく、期待したstep pathとRetrieval evidence recallも確認します。`/eval/action-cards?mode=deterministic` はlegacy Python workflowの安定評価として残しています。
 
 Evidence検索では、PostgreSQLの `evidence_items` テーブルに `embedding vector(32)` を保存し、pgvectorのcosine距離でtop-k検索します。ローカル開発でAPIキーなしに動かせるよう、embeddingは外部APIではなく決定的なローカル関数で生成します。DB未起動、未seed、pgvector検索失敗時はseed JSONのkeyword scoringにfallbackします。
 

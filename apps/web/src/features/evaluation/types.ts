@@ -26,6 +26,8 @@ export type ActionCardEvalCaseResult = {
   step_path_match: boolean;
   unsafe_action_count_match: boolean;
   required_evidence_covered: boolean;
+  retrieval_evaluated: boolean;
+  retrieval_evidence_covered: boolean;
   schema_valid: boolean;
   agent_steps_completed: boolean;
   expected_actions: ActionKind[];
@@ -39,6 +41,8 @@ export type ActionCardEvalCaseResult = {
   required_evidence_ids: string[];
   actual_evidence_ids: string[];
   missing_evidence_ids: string[];
+  actual_retrieved_evidence_ids: string[];
+  missing_retrieved_evidence_ids: string[];
   expected_generation_mode?: "deterministic_template" | "gemini_assisted" | null;
   generation_mode?: "deterministic_template" | "gemini_assisted" | null;
   fallback_reason?: string | null;
@@ -69,6 +73,7 @@ export type ActionCardEvalRunResult = {
   unsafe_action_match_rate: number;
   schema_valid_rate: number;
   evidence_recall: number;
+  retrieval_recall: number;
   cases: ActionCardEvalCaseResult[];
 };
 

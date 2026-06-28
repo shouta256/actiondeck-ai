@@ -43,7 +43,7 @@ MVPでは、まず処理の境界を明確にするため、`apps/api/app/agents
 - Evidence seedをPostgreSQLへ投入し、pgvectorでtop-k検索する
 - Agent Run結果はPostgreSQLに保存する。接続できない場合は開発用にメモリ保存へfallbackする
 - WebではAction Card詳細、Evidence、Trace、Review、Agent Run結果を表示する
-- Evaluation画面で `deterministic` / `graph` / `gemini` modeを切り替え、評価ケースの期待値、route、Graph step pathと比較する
+- Evaluation画面で `deterministic` / `graph` / `gemini` modeを切り替え、評価ケースの期待値、route、Graph step path、Retrieval evidence recallと比較する
 
 ## Phase 2の拡張方針 (確定順序)
 
@@ -51,7 +51,7 @@ MVPの縦スライスを保ったまま、以下の順番で拡張する。
 
 1. 評価ケース拡充 (12件まで実装済み)
 2. Python workflowをLangGraphへ移行する (標準Agent RunはGraphへ切り替え済み。approval gate、terminal route、conflicting evidence route、低リスクToDo routeもGraph上に表現済み)
-3. seed evidence検索をpgvector検索へ置き換える (最小導入済み。次は検索品質評価と外部Embedding APIを検討する)
+3. seed evidence検索をpgvector検索へ置き換える (最小導入済み。Retrieval evidence recallも評価に追加済み。次は外部Embedding APIを検討する)
 4. Calendar read-only OAuthを追加する (予定作成はせず、衝突検知と提案に留める)
 5. (条件付き) Calendar同期ジョブでretry/idempotencyが必要ならGo sync workerを切り出す
 6. (最後) Gmail OAuthをInbox Adapterの1つとして検討する

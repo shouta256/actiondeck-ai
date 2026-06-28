@@ -62,6 +62,7 @@ def run_legacy_agent_workflow(
             for sequence, node_result in enumerate(node_results, start=1)
         ],
         evidence_items=list(referenced_evidence_items),
+        retrieved_evidence_items=list(state.retrieved_evidence_items),
         generation_mode=state.generation_mode,
         fallback_reason=state.fallback_reason,
         route=state.route,

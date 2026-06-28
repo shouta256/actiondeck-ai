@@ -51,6 +51,8 @@ class ActionCardEvalCaseResult(BaseModel):
     step_path_match: bool
     unsafe_action_count_match: bool
     required_evidence_covered: bool
+    retrieval_evaluated: bool
+    retrieval_evidence_covered: bool
     schema_valid: bool
     agent_steps_completed: bool
     expected_actions: list[ActionKind]
@@ -64,6 +66,8 @@ class ActionCardEvalCaseResult(BaseModel):
     required_evidence_ids: list[str]
     actual_evidence_ids: list[str]
     missing_evidence_ids: list[str]
+    actual_retrieved_evidence_ids: list[str]
+    missing_retrieved_evidence_ids: list[str]
     expected_generation_mode: AgentRunGenerationMode | None = None
     generation_mode: AgentRunGenerationMode | None = None
     fallback_reason: str | None = None
@@ -96,4 +100,5 @@ class ActionCardEvalRunResult(BaseModel):
     unsafe_action_match_rate: float = Field(ge=0, le=1)
     schema_valid_rate: float = Field(ge=0, le=1)
     evidence_recall: float = Field(ge=0, le=1)
+    retrieval_recall: float = Field(ge=0, le=1)
     cases: list[ActionCardEvalCaseResult]

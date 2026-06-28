@@ -20,6 +20,7 @@ class AgentWorkflowResult:
     action_card: ActionCard
     agent_steps: list[AgentTraceStep]
     evidence_items: list[EvidenceItem]
+    retrieved_evidence_items: list[EvidenceItem]
     generation_mode: AgentRunGenerationMode
     fallback_reason: str | None
     route: AgentRoute | None

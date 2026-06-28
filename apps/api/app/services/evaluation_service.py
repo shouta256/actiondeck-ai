@@ -19,7 +19,7 @@ from app.schemas import (
     AgentRunGenerationMode,
     RiskLevel,
 )
-from app.schemas.agent_trace import AgentStepStatus
+from app.schemas.agent_trace import AgentStepName, AgentStepStatus
 from app.schemas.evaluation import ActionCardEvalCaseResult
 from app.services.action_card_store import list_action_cards
 from app.services.evidence_store import list_evidence_items
@@ -100,6 +100,19 @@ def run_action_card_eval(
         len(result.missing_evidence_ids) for result in case_results
     )
     covered_evidence_count = required_evidence_count - missing_evidence_count
+    required_retrieval_evidence_count = sum(
+        len(result.required_evidence_ids)
+        for result in case_results
+        if result.retrieval_evaluated
+    )
+    missing_retrieval_evidence_count = sum(
+        len(result.missing_retrieved_evidence_ids)
+        for result in case_results
+        if result.retrieval_evaluated
+    )
+    covered_retrieval_evidence_count = (
+        required_retrieval_evidence_count - missing_retrieval_evidence_count
+    )
 
     return ActionCardEvalRunResult(
         mode=mode,
@@ -118,6 +131,10 @@ def run_action_card_eval(
         unsafe_action_match_rate=_safe_rate(unsafe_action_matches, total_cases),
         schema_valid_rate=_safe_rate(schema_valid_results, total_cases),
         evidence_recall=_safe_rate(covered_evidence_count, required_evidence_count),
+        retrieval_recall=_safe_rate(
+            covered_retrieval_evidence_count,
+            required_retrieval_evidence_count,
+        ),
         cases=list(case_results),
     )
 
@@ -164,6 +181,24 @@ def _evaluate_case(
         for evidence_id in case.required_evidence_ids
         if evidence_id not in actual_evidence_ids
     ]
+    actual_retrieved_evidence_ids = (
+        [item.id for item in workflow_result.retrieved_evidence_items]
+        if workflow_result
+        else []
+    )
+    retrieval_evaluated = (
+        mode == ActionCardEvalMode.GRAPH
+        and AgentStepName.EVIDENCE_RETRIEVAL in _actual_step_names(workflow_result)
+    )
+    missing_retrieved_evidence_ids = (
+        [
+            evidence_id
+            for evidence_id in case.required_evidence_ids
+            if evidence_id not in actual_retrieved_evidence_ids
+        ]
+        if retrieval_evaluated
+        else []
+    )
     actions_match = set(actual_actions) == set(case.expected_actions)
     priority_match = (
         action_card is not None and action_card.priority == case.expected_priority
@@ -177,6 +212,9 @@ def _evaluate_case(
     )
     missing_info_match = set(actual_missing_info) == set(case.expected_missing_info)
     required_evidence_covered = len(missing_evidence_ids) == 0
+    retrieval_evidence_covered = (
+        not retrieval_evaluated or len(missing_retrieved_evidence_ids) == 0
+    )
     schema_valid = action_card is not None
     agent_steps_completed = _agent_steps_completed(workflow_result)
     generation_mode = workflow_result.generation_mode if workflow_result else None
@@ -186,11 +224,7 @@ def _evaluate_case(
     )
     actual_route = workflow_result.route if workflow_result else None
     route_match = case.expected_route is None or actual_route == case.expected_route
-    actual_step_names = (
-        [step.step_name for step in workflow_result.agent_steps]
-        if workflow_result
-        else []
-    )
+    actual_step_names = _actual_step_names(workflow_result)
     step_path_match = (
         mode != ActionCardEvalMode.GRAPH
         or not case.expected_step_names
@@ -213,6 +247,7 @@ def _evaluate_case(
         step_path_match=step_path_match,
         unsafe_action_count_match=unsafe_action_count_match,
         required_evidence_covered=required_evidence_covered,
+        retrieval_evidence_covered=retrieval_evidence_covered,
         agent_steps_completed=agent_steps_completed,
     )
     passed = (
@@ -226,6 +261,7 @@ def _evaluate_case(
         and step_path_match
         and unsafe_action_count_match
         and required_evidence_covered
+        and retrieval_evidence_covered
         and agent_steps_completed
     )
 
@@ -242,6 +278,8 @@ def _evaluate_case(
         step_path_match=step_path_match,
         unsafe_action_count_match=unsafe_action_count_match,
         required_evidence_covered=required_evidence_covered,
+        retrieval_evaluated=retrieval_evaluated,
+        retrieval_evidence_covered=retrieval_evidence_covered,
         schema_valid=schema_valid,
         agent_steps_completed=agent_steps_completed,
         expected_actions=case.expected_actions,
@@ -257,6 +295,8 @@ def _evaluate_case(
         required_evidence_ids=case.required_evidence_ids,
         actual_evidence_ids=actual_evidence_ids,
         missing_evidence_ids=missing_evidence_ids,
+        actual_retrieved_evidence_ids=actual_retrieved_evidence_ids,
+        missing_retrieved_evidence_ids=missing_retrieved_evidence_ids,
         expected_generation_mode=case.expected_generation_mode,
         generation_mode=generation_mode,
         fallback_reason=workflow_result.fallback_reason if workflow_result else None,
@@ -276,6 +316,12 @@ def _agent_steps_completed(workflow_result: AgentWorkflowResult | None) -> bool:
         step.status == AgentStepStatus.COMPLETED
         for step in workflow_result.agent_steps
     )
+
+
+def _actual_step_names(
+    workflow_result: AgentWorkflowResult | None,
+) -> list[AgentStepName]:
+    return [step.step_name for step in workflow_result.agent_steps] if workflow_result else []
 
 
 def _count_unsafe_actions(action_card: ActionCard | None) -> int:
@@ -311,6 +357,7 @@ def _build_failure_reasons(
     step_path_match: bool,
     unsafe_action_count_match: bool,
     required_evidence_covered: bool,
+    retrieval_evidence_covered: bool,
     agent_steps_completed: bool,
 ) -> list[str]:
     reasons = []
@@ -338,6 +385,8 @@ def _build_failure_reasons(
         reasons.append("unsafe_action_count did not match expected value")
     if not required_evidence_covered:
         reasons.append("required evidence was not covered")
+    if not retrieval_evidence_covered:
+        reasons.append("retrieval did not cover required evidence")
     if not agent_steps_completed:
         reasons.append("one or more workflow steps did not complete")
     return reasons

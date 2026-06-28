@@ -56,6 +56,7 @@ function buildMetrics(result: ActionCardEvalRunResult) {
     ["Step path", formatRate(result.step_path_match_rate)],
     ["Unsafe match", formatRate(result.unsafe_action_match_rate)],
     ["Evidence recall", formatRate(result.evidence_recall)],
+    ["Retrieval recall", formatRate(result.retrieval_recall)],
   ];
 }
 
@@ -176,7 +177,7 @@ export default async function EvalPage({ searchParams }: EvalPageProps) {
         </section>
 
         <section className="mt-6 overflow-x-auto rounded-md border border-neutral-200 bg-white">
-          <table className="w-full min-w-[1460px] border-collapse text-left text-sm">
+          <table className="w-full min-w-[1580px] border-collapse text-left text-sm">
             <thead className="border-b border-neutral-200 bg-neutral-100 text-xs font-medium uppercase text-neutral-500">
               <tr>
                 <th className="px-4 py-3">Case</th>
@@ -189,6 +190,7 @@ export default async function EvalPage({ searchParams }: EvalPageProps) {
                 <th className="px-4 py-3">Approval</th>
                 <th className="px-4 py-3">Unsafe</th>
                 <th className="px-4 py-3">Evidence</th>
+                <th className="px-4 py-3">Retrieval</th>
                 <th className="px-4 py-3">Workflow</th>
                 <th className="px-4 py-3">Action Card</th>
                 <th className="px-4 py-3">Failure</th>
@@ -255,6 +257,27 @@ export default async function EvalPage({ searchParams }: EvalPageProps) {
                         ? "ok"
                         : testCase.missing_evidence_ids.join(", ")}
                     </td>
+                    <td className="px-4 py-3 text-xs text-neutral-700">
+                      <div>
+                        {!testCase.retrieval_evaluated
+                          ? "skipped"
+                          : testCase.retrieval_evidence_covered
+                            ? "ok"
+                            : "mismatch"}
+                      </div>
+                      {testCase.retrieval_evaluated ? (
+                        <div className="mt-1 max-w-64 text-neutral-500">
+                          {testCase.actual_retrieved_evidence_ids.join(", ") ||
+                            "-"}
+                        </div>
+                      ) : null}
+                      {testCase.missing_retrieved_evidence_ids.length > 0 ? (
+                        <div className="mt-1 max-w-64 text-neutral-500">
+                          missing:{" "}
+                          {testCase.missing_retrieved_evidence_ids.join(", ")}
+                        </div>
+                      ) : null}
+                    </td>
                     <td className="px-4 py-3 text-neutral-700">
                       <div>
                         {testCase.schema_valid &&
@@ -286,7 +309,7 @@ export default async function EvalPage({ searchParams }: EvalPageProps) {
                 <tr>
                   <td
                     className="px-4 py-6 text-sm text-neutral-500"
-                    colSpan={13}
+                    colSpan={14}
                   >
                     表示できる評価結果がありません。
                   </td>

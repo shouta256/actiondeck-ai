@@ -49,7 +49,7 @@ review_required
 7. 実行結果としてAction Card、Evidence、Agent Traceを画面に表示する
 8. Action Cardを承認・編集済み・却下としてレビューする
 9. 評価ケース12件でlegacy workflow / LangGraph runner / Gemini生成の出力を測定する
-10. Graph評価ではrouteだけでなく、期待したstep pathを通ったかも確認する
+10. Graph評価ではroute、期待したstep path、Retrieval evidence recallも確認する
 
 Agent Workflowの設計は [docs/agent_workflow.md](docs/agent_workflow.md) に整理しています。
 

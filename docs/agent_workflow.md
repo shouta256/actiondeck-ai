@@ -50,7 +50,7 @@ Action Cardの根拠になるEvidenceを選びます。
 
 MVPでは `data/seed/evidence_items.json` のseed evidenceをPostgreSQLの `evidence_items` テーブルへ投入し、`embedding vector(32)` をpgvectorでtop-k検索します。embeddingは外部APIではなく、ローカルの決定的なhash embeddingで生成します。これは検索基盤の構造を先に作り、APIキーなしでも評価とデモが壊れないようにするためです。
 
-DB未起動、未seed、pgvector検索失敗時は、従来のseed evidenceに対する簡易スコアリングへfallbackします。今後はこのembedding部分を外部Embedding APIへ差し替え、pgvector検索の品質をrequired evidence hit rateなどで評価します。
+DB未起動、未seed、pgvector検索失敗時は、従来のseed evidenceに対する簡易スコアリングへfallbackします。Evaluationでは、最終Action Cardの `evidence_ids` だけでなく、Retrieval nodeが実際に取得したEvidence IDもrequired evidenceと比較します。
 
 ### Planning
 
@@ -90,7 +90,7 @@ Geminiを毎回呼ぶ評価は出力が揺れやすく、CIにも向きません
 
 評価modeは3つあります。`deterministic` はlegacy Python workflowをGeminiなしで安定評価し、`gemini` はlegacy Python workflowで手動確認用にGemini生成も含めて評価します。`graph` は標準Agent Runと同じLangGraph runnerをGeminiなしで実行し、同じ評価ケースで回帰確認するためのmodeです。
 
-Phase 2では、LangGraph移行前に `route` も評価対象にしました。さらにGraph modeでは `expected_step_names` と実際のTrace step順を比較し、`missing_info`、`ignore`、`low_risk_todo`、`review_required`、`conflicting_evidence` が期待したworkflow pathを通ったかを確認します。deterministic / gemini modeはlegacy workflowの安定評価を壊さないため、step pathはGraph modeで検証します。
+Phase 2では、LangGraph移行前に `route` も評価対象にしました。さらにGraph modeでは `expected_step_names` と実際のTrace step順を比較し、`missing_info`、`ignore`、`low_risk_todo`、`review_required`、`conflicting_evidence` が期待したworkflow pathを通ったかを確認します。Retrievalが実行されたケースでは、実際に取得したEvidence IDにrequired evidenceが含まれるかも評価します。deterministic / gemini modeはlegacy workflowの安定評価を壊さないため、step pathはGraph modeで検証します。
 
 ## 実装ファイル
 
