@@ -182,6 +182,28 @@ def check_safety(state: AgentState) -> AgentNodeResult:
     )
 
 
+def approval_gate(state: AgentState) -> AgentNodeResult:
+    if state.action_card is None:
+        return AgentNodeResult(
+            step_name=AgentStepName.APPROVAL_GATE,
+            status=AgentStepStatus.FAILED,
+            input_summary="No Action Card was available for approval gating.",
+            output_summary="Approval gate could not run.",
+        )
+
+    if state.action_card.approval_required:
+        output = "Waiting for user approval; no external action executed."
+    else:
+        output = "No approval required; external execution is still disabled in MVP."
+
+    return AgentNodeResult(
+        step_name=AgentStepName.APPROVAL_GATE,
+        status=AgentStepStatus.COMPLETED,
+        input_summary=f"Checked approval boundary for {state.action_card.id}.",
+        output_summary=output,
+    )
+
+
 def _score_evidence_item(state: AgentState, evidence_item: EvidenceItem) -> float:
     text = _inbox_text(state)
     score = 0.0

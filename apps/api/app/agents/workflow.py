@@ -1,4 +1,5 @@
 from app.agents.nodes import (
+    approval_gate,
     check_safety,
     plan_action_card,
     retrieve_evidence,
@@ -38,6 +39,7 @@ def run_legacy_agent_workflow(
         run_node(state, retrieve_evidence),
         run_node(state, plan_action_card),
         run_node(state, check_safety),
+        run_node(state, approval_gate),
     ]
 
     if state.action_card is None:

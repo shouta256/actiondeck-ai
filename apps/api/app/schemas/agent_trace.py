@@ -8,6 +8,7 @@ class AgentStepName(StrEnum):
     EVIDENCE_RETRIEVAL = "evidence_retrieval"
     ACTION_PLANNING = "action_planning"
     SAFETY_CHECK = "safety_check"
+    APPROVAL_GATE = "approval_gate"
 
 
 class AgentStepStatus(StrEnum):

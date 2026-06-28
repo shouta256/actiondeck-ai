@@ -17,6 +17,7 @@ def test_graph_workflow_skips_retrieval_and_planning_for_ignore_route():
     assert [step.step_name for step in result.agent_steps] == [
         AgentStepName.TRIAGE,
         AgentStepName.SAFETY_CHECK,
+        AgentStepName.APPROVAL_GATE,
     ]
 
 
@@ -30,6 +31,7 @@ def test_graph_workflow_skips_retrieval_and_planning_for_missing_info_route():
     assert [step.step_name for step in result.agent_steps] == [
         AgentStepName.TRIAGE,
         AgentStepName.SAFETY_CHECK,
+        AgentStepName.APPROVAL_GATE,
     ]
 
 
@@ -45,6 +47,7 @@ def test_graph_workflow_runs_full_path_for_review_required_route():
         AgentStepName.EVIDENCE_RETRIEVAL,
         AgentStepName.ACTION_PLANNING,
         AgentStepName.SAFETY_CHECK,
+        AgentStepName.APPROVAL_GATE,
     ]
 
 

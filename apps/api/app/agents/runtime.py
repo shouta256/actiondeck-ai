@@ -89,5 +89,6 @@ def _step_name_for_node(
         "retrieve_evidence": AgentStepName.EVIDENCE_RETRIEVAL,
         "plan_action_card": AgentStepName.ACTION_PLANNING,
         "check_safety": AgentStepName.SAFETY_CHECK,
+        "approval_gate": AgentStepName.APPROVAL_GATE,
     }
     return step_names[node.__name__]

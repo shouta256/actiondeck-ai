@@ -4,6 +4,7 @@ from langgraph.graph import END, START, StateGraph
 
 from app.agents.nodes import (
     AgentNodeResult,
+    approval_gate,
     check_safety,
     plan_action_card,
     retrieve_evidence,
@@ -92,6 +93,7 @@ def _build_graph():
     graph_builder.add_node("retrieval", _node_runner(retrieve_evidence))
     graph_builder.add_node("planning", _node_runner(plan_action_card))
     graph_builder.add_node("safety", _safety_node_runner())
+    graph_builder.add_node("approval_gate", _node_runner(approval_gate))
     graph_builder.add_edge(START, "triage")
     graph_builder.add_conditional_edges(
         "triage",
@@ -103,7 +105,8 @@ def _build_graph():
     )
     graph_builder.add_edge("retrieval", "planning")
     graph_builder.add_edge("planning", "safety")
-    graph_builder.add_edge("safety", END)
+    graph_builder.add_edge("safety", "approval_gate")
+    graph_builder.add_edge("approval_gate", END)
     return graph_builder.compile()
 
 

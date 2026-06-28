@@ -76,6 +76,21 @@
     }
   },
   {
+    "action_card_id": "action_001",
+    "sequence": 5,
+    "step_name": "approval_gate",
+    "status": "completed",
+    "input_summary": "action_001の承認境界を確認。",
+    "output_summary": "ユーザー承認待ちに設定し、メール送信や予定作成は実行しない。",
+    "tool_calls": [],
+    "latency_ms": 45,
+    "token_usage": {
+      "input_tokens": 180,
+      "output_tokens": 42,
+      "total_tokens": 222
+    }
+  },
+  {
     "action_card_id": "action_002",
     "sequence": 1,
     "step_name": "triage",
@@ -118,6 +133,21 @@
       "input_tokens": 220,
       "output_tokens": 58,
       "total_tokens": 278
+    }
+  },
+  {
+    "action_card_id": "action_002",
+    "sequence": 4,
+    "step_name": "approval_gate",
+    "status": "completed",
+    "input_summary": "action_002の承認境界を確認。",
+    "output_summary": "承認不要だが、MVPでは外部ToDo作成は実行しない。",
+    "tool_calls": [],
+    "latency_ms": 38,
+    "token_usage": {
+      "input_tokens": 150,
+      "output_tokens": 36,
+      "total_tokens": 186
     }
   }
 ]

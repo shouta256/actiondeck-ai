@@ -2,7 +2,8 @@ export type AgentStepName =
   | "triage"
   | "evidence_retrieval"
   | "action_planning"
-  | "safety_check";
+  | "safety_check"
+  | "approval_gate";
 
 export type AgentStepStatus = "completed" | "skipped" | "failed";
 
