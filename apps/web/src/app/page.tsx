@@ -3,6 +3,7 @@ import Link from "next/link";
 import { listActionCards } from "@/features/action-cards/api";
 import type { ActionCard } from "@/features/action-cards/types";
 import { listAgentRuns } from "@/features/agent-runs/api";
+import { GoogleCalendarPanel } from "@/features/integrations/google-calendar-panel";
 
 type DemoScenario = {
   sourceItemId: string;
@@ -277,22 +278,26 @@ export default async function Home() {
           </div>
         </section>
 
-        <aside className="rounded-md border border-neutral-200 bg-white p-4">
-          <h2 className="text-sm font-semibold">Review Queue</h2>
-          <dl className="mt-4 divide-y divide-neutral-100">
-            {reviewStats.map(([label, value]) => (
-              <div
-                key={label}
-                className="flex items-center justify-between py-3 text-sm"
-              >
-                <dt className="text-neutral-500">{label}</dt>
-                <dd className="font-medium text-neutral-950">{value}</dd>
-              </div>
-            ))}
-          </dl>
-          <p className="mt-4 border-t border-neutral-100 pt-4 text-sm leading-6 text-neutral-500">
-            FastAPIのAction Card APIから取得したデータを表示しています。
-          </p>
+        <aside className="space-y-4">
+          <GoogleCalendarPanel />
+
+          <section className="rounded-md border border-neutral-200 bg-white p-4">
+            <h2 className="text-sm font-semibold">Review Queue</h2>
+            <dl className="mt-4 divide-y divide-neutral-100">
+              {reviewStats.map(([label, value]) => (
+                <div
+                  key={label}
+                  className="flex items-center justify-between py-3 text-sm"
+                >
+                  <dt className="text-neutral-500">{label}</dt>
+                  <dd className="font-medium text-neutral-950">{value}</dd>
+                </div>
+              ))}
+            </dl>
+            <p className="mt-4 border-t border-neutral-100 pt-4 text-sm leading-6 text-neutral-500">
+              FastAPIのAction Card APIから取得したデータを表示しています。
+            </p>
+          </section>
         </aside>
       </div>
     </main>

@@ -63,17 +63,18 @@ Approval Gate
 ## 画面で見る場所
 
 1. `/` で `Demo Scenarios` を見る
-2. `面談日程調整` から `action_001` を開く
-3. 画面上部の `Agent Decision` で、Actions、Evidence、Approval、Workflowを見る
-4. Source Messageで元メールを見る
-5. `Run agent` を押す
-6. Latest Agent Runで生成結果を見る
-7. Run Evidenceで根拠を見る
-8. Run Traceで `Triage -> Retrieval -> Planning -> Safety -> Approval Gate` を見る
-9. ReviewでHuman-in-the-loopを確認する
-10. `/eval` でdeterministic評価を見る
-11. `/eval?mode=graph` でLangGraph runner評価とstep path評価を見る
-12. `/eval?mode=gemini` でGemini評価を見る
+2. 右側のGoogle Calendar panelでread-only接続と同期状態を見る
+3. `面談日程調整` から `action_001` を開く
+4. 画面上部の `Agent Decision` で、Actions、Evidence、Approval、Workflowを見る
+5. Source Messageで元メールを見る
+6. `Run agent` を押す
+7. Latest Agent Runで生成結果を見る
+8. Run Evidenceで根拠を見る
+9. Run Traceで `Triage -> Retrieval -> Planning -> Safety -> Approval Gate` を見る
+10. ReviewでHuman-in-the-loopを確認する
+11. `/eval` でdeterministic評価を見る
+12. `/eval?mode=graph` でLangGraph runner評価とstep path評価を見る
+13. `/eval?mode=gemini` でGemini評価を見る
 
 ## 予定衝突シナリオ
 
@@ -100,6 +101,6 @@ Approval Gate
 - 根拠とTraceを表示し、AIの判断を後から確認できます
 - 外部アクションは自動実行せず、Human-in-the-loopで止めます
 - LangGraph runnerはroute別に不要なPlanningを省略し、コストと出力ゆれを抑えます
-- Calendar availabilityはread-onlyで参照し、予定作成は行いません
+- Calendar availabilityはread-onlyで参照し、Google Calendar同期後も予定作成は行いません
 - deterministic評価、Graph評価、Gemini評価を分け、legacy比較、標準Graph経路の確認、LLM品質確認を分離しています
 - Graph評価では、出力だけでなく期待したstep pathを通ったかも確認します

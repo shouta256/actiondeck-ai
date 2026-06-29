@@ -105,14 +105,15 @@ Gemini Embeddingを使う場合は `EMBEDDING_PROVIDER=gemini` にします。AP
 1. `make setup` で依存関係とローカルDBを準備する
 2. `make up` でWebとAPIを起動する
 3. http://localhost:3000 を開く
-4. `action_001` の詳細を開く
-5. Source Messageで面談候補日のメールを確認する
-6. `Run agent` を押す
-7. Latest Agent Runで生成されたAction Card、Evidence、Run Traceを確認する
-8. Reviewで `Approve` / `Mark edited` / `Reject` を試す
-9. http://localhost:3000/eval を開き、deterministic評価を確認する
-10. http://localhost:3000/eval?mode=graph でLangGraph runner評価とstep path評価を確認する
-11. http://localhost:3000/eval?mode=gemini でGemini評価を確認する
+4. 右側のGoogle Calendar panelで接続状態と同期状態を確認する
+5. `action_001` の詳細を開く
+6. Source Messageで面談候補日のメールを確認する
+7. `Run agent` を押す
+8. Latest Agent Runで生成されたAction Card、Evidence、Run Traceを確認する
+9. Reviewで `Approve` / `Mark edited` / `Reject` を試す
+10. http://localhost:3000/eval を開き、deterministic評価を確認する
+11. http://localhost:3000/eval?mode=graph でLangGraph runner評価とstep path評価を確認する
+12. http://localhost:3000/eval?mode=gemini でGemini評価を確認する
 
 デモシナリオは [docs/demo_scenario.md](docs/demo_scenario.md) に整理しています。
 
@@ -181,6 +182,10 @@ http://127.0.0.1:8000/integrations/google-calendar/oauth/callback
 ```
 
 `apps/api/.env` に `GOOGLE_OAUTH_CLIENT_ID` と `GOOGLE_OAUTH_CLIENT_SECRET` を設定したうえで、認可URLを取得します。
+
+Web画面から接続する場合は、http://localhost:3000 のGoogle Calendar panelで `Connect` を押します。同期は同じpanelの `Sync` から実行できます。
+
+curlで確認する場合:
 
 ```bash
 curl http://127.0.0.1:8000/integrations/google-calendar/oauth/start
