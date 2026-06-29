@@ -54,6 +54,14 @@ def test_graph_workflow_runs_full_path_for_review_required_route():
 def test_graph_workflow_adds_calendar_availability_to_safety_notes():
     result = _run_graph_workflow_for_inbox("inbox_006")
 
+    assert result.calendar_availability is not None
+    assert len(result.calendar_availability.candidates) == 2
+    first_candidate = result.calendar_availability.candidates[0]
+    second_candidate = result.calendar_availability.candidates[1]
+    assert not first_candidate.is_available
+    assert first_candidate.conflicting_events[0].id == "cal_001"
+    assert second_candidate.is_available
+
     safety_text = "\n".join(result.action_card.safety_notes)
     assert "アルバイト" in safety_text
     assert "cal_001" in safety_text

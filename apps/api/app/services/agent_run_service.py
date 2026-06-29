@@ -31,6 +31,7 @@ def run_agent_for_inbox_item(inbox_item: InboxItem) -> AgentRunResult | None:
         action_card=workflow_result.action_card,
         agent_steps=workflow_result.agent_steps,
         evidence_items=workflow_result.evidence_items,
+        calendar_availability=workflow_result.calendar_availability,
         llm_model=settings.gemini_model,
         llm_configured=bool(settings.gemini_api_key),
         generation_mode=workflow_result.generation_mode,

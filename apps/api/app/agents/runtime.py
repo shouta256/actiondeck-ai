@@ -10,9 +10,12 @@ from app.schemas import (
     AgentStepName,
     AgentStepStatus,
     AgentTraceStep,
+    CalendarAvailabilityCandidate,
+    CalendarAvailabilityReport,
     EvidenceItem,
 )
 from app.schemas.agent_route import AgentRoute
+from app.services.calendar_availability import CalendarAvailabilityResult
 
 
 @dataclass(frozen=True)
@@ -21,6 +24,7 @@ class AgentWorkflowResult:
     agent_steps: list[AgentTraceStep]
     evidence_items: list[EvidenceItem]
     retrieved_evidence_items: list[EvidenceItem]
+    calendar_availability: CalendarAvailabilityReport | None
     generation_mode: AgentRunGenerationMode
     fallback_reason: str | None
     route: AgentRoute | None
@@ -79,6 +83,27 @@ def list_referenced_evidence_items(
         evidence_by_id[evidence_id]
         for evidence_id in action_card.evidence_ids
         if evidence_id in evidence_by_id
+    )
+
+
+def to_calendar_availability_report(
+    result: CalendarAvailabilityResult | None,
+) -> CalendarAvailabilityReport | None:
+    if result is None:
+        return None
+
+    return CalendarAvailabilityReport(
+        candidates=[
+            CalendarAvailabilityCandidate(
+                start=candidate.start,
+                end=candidate.end,
+                is_available=candidate.is_available,
+                conflicting_events=list(candidate.conflicting_events),
+            )
+            for candidate in result.candidates
+        ],
+        inspected_event_count=result.inspected_event_count,
+        fallback_reason=result.fallback_reason,
     )
 
 

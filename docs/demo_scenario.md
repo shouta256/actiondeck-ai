@@ -69,12 +69,13 @@ Approval Gate
 5. Source Messageで元メールを見る
 6. `Run agent` を押す
 7. Latest Agent Runで生成結果を見る
-8. Run Evidenceで根拠を見る
-9. Run Traceで `Triage -> Retrieval -> Planning -> Safety -> Approval Gate` を見る
-10. ReviewでHuman-in-the-loopを確認する
-11. `/eval` でdeterministic評価を見る
-12. `/eval?mode=graph` でLangGraph runner評価とstep path評価を見る
-13. `/eval?mode=gemini` でGemini評価を見る
+8. Calendar Availabilityで候補日時ごとの空き・衝突を見る
+9. Run Evidenceで根拠を見る
+10. Run Traceで `Triage -> Retrieval -> Planning -> Safety -> Approval Gate` を見る
+11. ReviewでHuman-in-the-loopを確認する
+12. `/eval` でdeterministic評価を見る
+13. `/eval?mode=graph` でLangGraph runner評価とstep path評価を見る
+14. `/eval?mode=gemini` でGemini評価を見る
 
 ## 予定衝突シナリオ
 
@@ -88,9 +89,10 @@ Approval Gate
 画面では以下を確認します。
 
 1. `/` の `予定衝突あり` を開く
-2. `Agent Decision` の `Safety` と `Calendar` を確認する
-3. `Safety Notes` で `conflict` と `available` のメモを見る
-4. `Agent Trace` の `calendar_availability_check` tool callを見る
+2. `Run agent` を押す
+3. `Calendar Availability` で `10:00-10:30` がconflict、`11:00-11:30` がavailableになることを見る
+4. `Safety Notes` で `conflict` と `available` のメモを見る
+5. `Agent Trace` の `calendar_availability_check` tool callを見る
 
 ここで説明したいことは、AIが予定を作成しているのではなく、read-onlyなCalendar情報を使って安全確認だけを行い、最後はユーザー承認で止めている点です。
 

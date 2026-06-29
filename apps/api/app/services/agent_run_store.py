@@ -21,11 +21,15 @@ CREATE TABLE IF NOT EXISTS agent_runs (
   action_card jsonb NOT NULL,
   agent_steps jsonb NOT NULL,
   evidence_items jsonb NOT NULL,
+  calendar_availability jsonb,
   created_at timestamptz NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_agent_runs_inbox_item_created_at
   ON agent_runs (inbox_item_id, created_at DESC);
+
+ALTER TABLE agent_runs
+  ADD COLUMN IF NOT EXISTS calendar_availability jsonb;
 """
 
 
@@ -47,9 +51,10 @@ async def save_agent_run(agent_run: AgentRunResult) -> AgentRunResult:
                   action_card,
                   agent_steps,
                   evidence_items,
+                  calendar_availability,
                   created_at
                 )
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9::jsonb, $10::jsonb, $11)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9::jsonb, $10::jsonb, $11::jsonb, $12)
                 ON CONFLICT (run_id) DO UPDATE SET
                   inbox_item_id = EXCLUDED.inbox_item_id,
                   generation_mode = EXCLUDED.generation_mode,
@@ -60,6 +65,7 @@ async def save_agent_run(agent_run: AgentRunResult) -> AgentRunResult:
                   action_card = EXCLUDED.action_card,
                   agent_steps = EXCLUDED.agent_steps,
                   evidence_items = EXCLUDED.evidence_items,
+                  calendar_availability = EXCLUDED.calendar_availability,
                   created_at = EXCLUDED.created_at
                 """,
                 agent_run.run_id,
@@ -75,6 +81,11 @@ async def save_agent_run(agent_run: AgentRunResult) -> AgentRunResult:
                 ),
                 json.dumps(
                     [item.model_dump(mode="json") for item in agent_run.evidence_items]
+                ),
+                (
+                    json.dumps(agent_run.calendar_availability.model_dump(mode="json"))
+                    if agent_run.calendar_availability is not None
+                    else None
                 ),
                 agent_run.created_at,
             )
@@ -163,6 +174,7 @@ def _agent_run_from_row(row: asyncpg.Record) -> AgentRunResult:
             "action_card": _json_value(row["action_card"]),
             "agent_steps": _json_value(row["agent_steps"]),
             "evidence_items": _json_value(row["evidence_items"]),
+            "calendar_availability": _json_value(row["calendar_availability"]),
             "created_at": row["created_at"],
         }
     )

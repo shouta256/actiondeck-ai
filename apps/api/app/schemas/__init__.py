@@ -23,6 +23,10 @@ from app.schemas.action_card import (
     TodoProposal,
 )
 from app.schemas.calendar_event import CalendarEvent
+from app.schemas.calendar_availability import (
+    CalendarAvailabilityCandidate,
+    CalendarAvailabilityReport,
+)
 from app.schemas.evidence import EvidenceItem, EvidenceSourceType
 from app.schemas.evaluation import (
     ActionCardEvalCase,
@@ -60,6 +64,8 @@ __all__ = [
     "AgentTraceStep",
     "CalendarEventProposal",
     "CalendarEvent",
+    "CalendarAvailabilityCandidate",
+    "CalendarAvailabilityReport",
     "EvidenceItem",
     "EvidenceSourceType",
     "GoogleCalendarConnectionStatus",

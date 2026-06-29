@@ -44,7 +44,7 @@ MVPでは、まず処理の境界を明確にするため、`apps/api/app/agents
 - Evidence seedをPostgreSQLへ投入し、pgvectorでtop-k検索する
 - Agent Run結果はPostgreSQLに保存する。接続できない場合は開発用にメモリ保存へfallbackする
 - Calendar Event seedまたはGoogle Calendar read-only OAuth同期データをPostgreSQLへ投入し、予定候補の衝突をSafety Checkで確認する
-- WebではAction Card詳細、Evidence、Trace、Review、Agent Run結果を表示する
+- WebではAction Card詳細、Evidence、Trace、Review、Agent Run結果、Calendar Availabilityを表示する
 - Evaluation画面で `deterministic` / `graph` / `gemini` modeを切り替え、評価ケースの期待値、route、Graph step path、Retrieval evidence recall、Safety note反映と比較する
 
 ## Phase 2の拡張方針 (確定順序)

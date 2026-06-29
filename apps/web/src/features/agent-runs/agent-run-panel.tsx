@@ -4,13 +4,33 @@ import { useEffect, useState, useTransition } from "react";
 
 import { RunAgentButton } from "./run-agent-button";
 import { listAgentRuns } from "./api";
-import type { AgentRunResult } from "./types";
+import type { AgentRunResult, CalendarAvailabilityReport } from "./types";
 import type { ActionCard } from "@/features/action-cards/types";
 import type { AgentTraceStep } from "@/features/agent-trace/types";
 import type { EvidenceItem } from "@/features/evidence/types";
 
 function formatDateTime(value: string) {
   return value.replace("T", " ");
+}
+
+function formatLocalTimeRange(startValue: string, endValue: string) {
+  const start = new Date(startValue);
+  const end = new Date(endValue);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return "-";
+  }
+
+  const date = new Intl.DateTimeFormat(undefined, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(start);
+  const time = new Intl.DateTimeFormat(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  return `${date} ${time.format(start)}-${time.format(end)}`;
 }
 
 function Field({
@@ -95,6 +115,81 @@ function RunEvidenceList({ evidenceItems }: { evidenceItems: EvidenceItem[] }) {
       ) : (
         <p className="mt-2 text-xs text-neutral-500">
           この実行で参照した根拠はありません。
+        </p>
+      )}
+    </div>
+  );
+}
+
+function CalendarAvailabilityPanel({
+  report,
+}: {
+  report?: CalendarAvailabilityReport | null;
+}) {
+  if (!report) {
+    return null;
+  }
+
+  return (
+    <div className="border-t border-neutral-200 pt-3">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h4 className="text-xs font-semibold text-neutral-700">
+            Calendar Availability
+          </h4>
+          <p className="mt-1 text-xs text-neutral-500">
+            {report.inspected_event_count}件の予定と候補日時を照合しました。
+          </p>
+        </div>
+        {report.fallback_reason ? (
+          <span className="shrink-0 rounded border border-neutral-200 bg-neutral-50 px-2 py-1 font-mono text-[11px] text-neutral-600">
+            fallback
+          </span>
+        ) : null}
+      </div>
+
+      {report.candidates.length > 0 ? (
+        <ul className="mt-2 divide-y divide-neutral-200">
+          {report.candidates.map((candidate) => {
+            const status = candidate.is_available ? "available" : "conflict";
+            return (
+              <li className="py-2" key={`${candidate.start}-${candidate.end}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-xs font-medium text-neutral-950">
+                    {formatLocalTimeRange(candidate.start, candidate.end)}
+                  </p>
+                  <span
+                    className={
+                      candidate.is_available
+                        ? "shrink-0 rounded border border-emerald-200 bg-emerald-50 px-2 py-1 font-mono text-[11px] text-emerald-800"
+                        : "shrink-0 rounded border border-red-200 bg-red-50 px-2 py-1 font-mono text-[11px] text-red-800"
+                    }
+                  >
+                    {status}
+                  </span>
+                </div>
+                {candidate.conflicting_events.length > 0 ? (
+                  <ul className="mt-2 space-y-1">
+                    {candidate.conflicting_events.map((event) => (
+                      <li
+                        className="flex items-start justify-between gap-3 text-xs text-neutral-600"
+                        key={event.id}
+                      >
+                        <span className="min-w-0 truncate">{event.title}</span>
+                        <span className="shrink-0 font-mono text-[11px] text-neutral-500">
+                          {event.id}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <p className="mt-2 text-xs text-neutral-500">
+          明示的な候補日時は検出されませんでした。
         </p>
       )}
     </div>
@@ -187,6 +282,9 @@ export function AgentRunPanel({ inboxItemId }: { inboxItemId: string }) {
               </p>
             ) : null}
             <GeneratedCardSummary card={latestRun.action_card} />
+            <CalendarAvailabilityPanel
+              report={latestRun.calendar_availability}
+            />
             <RunEvidenceList evidenceItems={latestRun.evidence_items} />
             <RunTraceList steps={latestRun.agent_steps} />
           </div>

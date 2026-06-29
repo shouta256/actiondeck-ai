@@ -14,6 +14,7 @@ from app.agents.runtime import (
     AgentWorkflowResult,
     list_referenced_evidence_items,
     run_node as run_agent_node,
+    to_calendar_availability_report,
     to_trace_step,
 )
 from app.agents.state import AgentState
@@ -89,6 +90,9 @@ def run_agent_graph_workflow(
         ],
         evidence_items=list(referenced_evidence_items),
         retrieved_evidence_items=list(state.retrieved_evidence_items),
+        calendar_availability=to_calendar_availability_report(
+            state.calendar_availability
+        ),
         generation_mode=state.generation_mode,
         fallback_reason=state.fallback_reason,
         route=state.route,
