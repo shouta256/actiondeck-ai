@@ -82,6 +82,14 @@ make up
 
 http://localhost:3000 を開きます。
 
+デモ前にDB seedと評価をまとめて確認する場合:
+
+```bash
+make demo
+```
+
+`make demo` はDB起動、DB schema確認、Evidence/Calendar seed、Web build、API smoke test、評価、pytestを実行し、最後に見るべきURLとシナリオを表示します。アプリの起動自体は `make up` で行います。
+
 Geminiを使う場合は、`apps/api/.env.example` を参考に `apps/api/.env` にAPIキーを書きます。APIキー未設定でもdeterministic templateにfallbackして動きます。
 
 ```bash
@@ -104,17 +112,18 @@ Gemini Embeddingを使う場合は `EMBEDDING_PROVIDER=gemini` にします。AP
 ## Demo Flow
 
 1. `make setup` で依存関係とローカルDBを準備する
-2. `make up` でWebとAPIを起動する
-3. http://localhost:3000 を開く
-4. 右側のGoogle Calendar panelで接続状態と同期状態を確認する
-5. `action_001` の詳細を開く
-6. Source Messageで面談候補日のメールを確認する
-7. `Run agent` を押す
-8. Latest Agent Runで生成されたAction Card、Evidence、Run Traceを確認する
-9. Reviewで `Approve` / `Mark edited` / `Reject` を試す
-10. http://localhost:3000/eval を開き、deterministic評価を確認する
-11. http://localhost:3000/eval?mode=graph でLangGraph runner評価とstep path評価を確認する
-12. http://localhost:3000/eval?mode=gemini でGemini評価を確認する
+2. `make demo` でseedと評価が通ることを確認する
+3. `make up` でWebとAPIを起動する
+4. http://localhost:3000 を開く
+5. 右側のGoogle Calendar panelで接続状態、同期状態、Upcoming Eventsを確認する
+6. `予定衝突あり` の詳細を開く
+7. Source Messageで候補日時を確認する
+8. `Run agent` を押す
+9. Latest Agent Runで生成されたAction Card、Calendar Availability、Evidence、Run Traceを確認する
+10. Reviewで `Approve` / `Mark edited` / `Reject` を試す
+11. http://localhost:3000/eval を開き、deterministic評価を確認する
+12. http://localhost:3000/eval?mode=graph でLangGraph runner評価とstep path評価を確認する
+13. http://localhost:3000/eval?mode=gemini でGemini評価を確認する
 
 デモシナリオは [docs/demo_scenario.md](docs/demo_scenario.md) に整理しています。
 

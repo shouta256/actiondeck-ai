@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: setup up api web db-up db-down db-reset db-check db-seed check api-check web-lint web-build compose-check
+.PHONY: setup demo up api web db-up db-down db-reset db-check db-seed check api-check web-lint web-build compose-check
 
 setup:
 	npm --prefix apps/web install
@@ -8,6 +8,23 @@ setup:
 	$(MAKE) db-up
 	$(MAKE) db-check
 	$(MAKE) db-seed
+
+demo:
+	$(MAKE) db-up
+	$(MAKE) db-check
+	$(MAKE) db-seed
+	$(MAKE) check
+	@printf '\nDemo is ready.\n\n'
+	@printf 'Start the app:\n'
+	@printf '  make up\n\n'
+	@printf 'Open:\n'
+	@printf '  http://localhost:3000\n\n'
+	@printf 'Try:\n'
+	@printf '  1. 予定衝突あり\n'
+	@printf '  2. Run agent\n'
+	@printf '  3. Calendar Availability\n'
+	@printf '  4. Run Trace\n'
+	@printf '  5. http://localhost:3000/eval?mode=graph\n'
 
 up:
 	@echo "Starting API and web. Stop with Ctrl+C."
