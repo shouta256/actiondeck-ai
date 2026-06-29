@@ -29,6 +29,32 @@ def test_google_calendar_sync_uses_bounded_default_settings():
     assert settings.google_calendar_sync_max_results == 100
 
 
+def test_google_calendar_callback_redirects_to_web(monkeypatch):
+    async def complete_oauth(code: str, state: str):
+        return None
+
+    monkeypatch.setattr(
+        integrations,
+        "complete_google_calendar_oauth",
+        complete_oauth,
+    )
+    monkeypatch.setenv("ACTIONDECK_WEB_BASE_URL", "http://localhost:3000")
+    get_settings.cache_clear()
+    client = TestClient(app)
+
+    response = client.get(
+        "/integrations/google-calendar/oauth/callback?code=dummy&state=dummy",
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert (
+        response.headers["location"]
+        == "http://localhost:3000/?google_calendar=connected"
+    )
+    get_settings.cache_clear()
+
+
 def test_google_calendar_sync_requires_connection(monkeypatch):
     async def raise_not_connected(calendar_id: str):
         raise GoogleCalendarNotConnectedError("Google Calendar is not connected")

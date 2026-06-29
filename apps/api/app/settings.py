@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     )
     google_calendar_sync_days: int = 90
     google_calendar_sync_max_results: int = 100
+    actiondeck_web_base_url: str = "http://localhost:3000"
 
     @property
     def asyncpg_database_url(self) -> str:

@@ -96,6 +96,7 @@ GOOGLE_OAUTH_REDIRECT_URI=http://127.0.0.1:8000/integrations/google-calendar/oau
 GOOGLE_CALENDAR_SCOPES=https://www.googleapis.com/auth/calendar.readonly
 GOOGLE_CALENDAR_SYNC_DAYS=90
 GOOGLE_CALENDAR_SYNC_MAX_RESULTS=100
+ACTIONDECK_WEB_BASE_URL=http://localhost:3000
 ```
 
 Gemini Embeddingを使う場合は `EMBEDDING_PROVIDER=gemini` にします。APIキー未設定、またはEmbedding API呼び出しに失敗した場合はlocal deterministic embeddingへfallbackします。
@@ -191,7 +192,7 @@ curlで確認する場合:
 curl http://127.0.0.1:8000/integrations/google-calendar/oauth/start
 ```
 
-返ってきた `authorization_url` をブラウザで開き、認可後にcallbackが成功したら同期します。
+返ってきた `authorization_url` をブラウザで開きます。認可後にcallbackが成功すると、APIのJSON画面ではなく `ACTIONDECK_WEB_BASE_URL` のWeb画面へ戻ります。
 
 ```bash
 curl -X POST http://127.0.0.1:8000/integrations/google-calendar/sync

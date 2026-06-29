@@ -1,11 +1,14 @@
+from urllib.parse import urlencode
+
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import RedirectResponse
 
 from app.schemas import (
     GoogleCalendarConnectionStatus,
-    GoogleCalendarOAuthCallbackResponse,
     GoogleCalendarOAuthStartResponse,
     GoogleCalendarSyncResult,
 )
+from app.settings import get_settings
 from app.services.google_calendar_service import (
     GoogleCalendarNotConnectedError,
     GoogleCalendarOAuthExchangeError,
@@ -34,20 +37,26 @@ async def start_google_calendar_connection() -> GoogleCalendarOAuthStartResponse
 
 @router.get(
     "/google-calendar/oauth/callback",
-    response_model=GoogleCalendarOAuthCallbackResponse,
 )
 async def complete_google_calendar_connection(
     code: str,
     state: str,
-) -> GoogleCalendarOAuthCallbackResponse:
+) -> RedirectResponse:
     try:
-        return await complete_google_calendar_oauth(code=code, state=state)
+        await complete_google_calendar_oauth(code=code, state=state)
     except GoogleCalendarOAuthNotConfiguredError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
     except GoogleCalendarOAuthStateError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
     except GoogleCalendarOAuthExchangeError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
+
+    web_base_url = get_settings().actiondeck_web_base_url.rstrip("/")
+    query = urlencode({"google_calendar": "connected"})
+    return RedirectResponse(
+        url=f"{web_base_url}/?{query}",
+        status_code=303,
+    )
 
 
 @router.get(
