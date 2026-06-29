@@ -94,6 +94,8 @@ GOOGLE_OAUTH_CLIENT_ID=your_client_id
 GOOGLE_OAUTH_CLIENT_SECRET=your_client_secret
 GOOGLE_OAUTH_REDIRECT_URI=http://127.0.0.1:8000/integrations/google-calendar/oauth/callback
 GOOGLE_CALENDAR_SCOPES=https://www.googleapis.com/auth/calendar.readonly
+GOOGLE_CALENDAR_SYNC_DAYS=90
+GOOGLE_CALENDAR_SYNC_MAX_RESULTS=100
 ```
 
 Gemini Embeddingを使う場合は `EMBEDDING_PROVIDER=gemini` にします。APIキー未設定、またはEmbedding API呼び出しに失敗した場合はlocal deterministic embeddingへfallbackします。
@@ -191,6 +193,8 @@ curl -X POST http://127.0.0.1:8000/integrations/google-calendar/sync
 ```
 
 tokenはローカルDBの `oauth_connections` に保存します。MVPではread-only scopeかつローカル開発用の保存です。本番運用ではtoken暗号化、ユーザー分離、失効処理が必要です。
+
+同期対象はデフォルトで今後90日分です。繰り返し予定が何年分も展開されないよう、`GOOGLE_CALENDAR_SYNC_DAYS` で期間を制限しています。
 
 ## 開発チェック
 

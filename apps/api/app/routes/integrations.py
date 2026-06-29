@@ -11,6 +11,7 @@ from app.services.google_calendar_service import (
     GoogleCalendarOAuthExchangeError,
     GoogleCalendarOAuthNotConfiguredError,
     GoogleCalendarOAuthStateError,
+    GoogleCalendarSyncError,
     complete_google_calendar_oauth,
     get_google_calendar_connection_status,
     start_google_calendar_oauth,
@@ -70,3 +71,5 @@ async def sync_google_calendar_connection(
         raise HTTPException(status_code=503, detail=str(error)) from error
     except GoogleCalendarNotConnectedError as error:
         raise HTTPException(status_code=409, detail=str(error)) from error
+    except GoogleCalendarSyncError as error:
+        raise HTTPException(status_code=502, detail=str(error)) from error

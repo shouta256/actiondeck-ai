@@ -1,6 +1,6 @@
 import json
 import os
-from datetime import UTC, date, datetime, time
+from datetime import UTC, date, datetime, time, timedelta
 from secrets import token_urlsafe
 
 from google.auth.exceptions import GoogleAuthError
@@ -8,6 +8,7 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from oauthlib.oauth2 import OAuth2Error
 
 from app.schemas import (
@@ -45,6 +46,10 @@ class GoogleCalendarOAuthExchangeError(RuntimeError):
 
 
 class GoogleCalendarNotConnectedError(RuntimeError):
+    pass
+
+
+class GoogleCalendarSyncError(RuntimeError):
     pass
 
 
@@ -126,7 +131,6 @@ async def get_google_calendar_connection_status() -> GoogleCalendarConnectionSta
 async def sync_google_calendar_events(
     *,
     calendar_id: str = "primary",
-    max_results: int = 100,
 ) -> GoogleCalendarSyncResult:
     settings = get_settings()
     _ensure_google_oauth_configured(settings)
@@ -148,18 +152,26 @@ async def sync_google_calendar_events(
             expires_at=_normalize_expiry(credentials.expiry),
         )
 
+    time_min = datetime.now(UTC)
+    time_max = time_min + timedelta(days=settings.google_calendar_sync_days)
     service = build("calendar", "v3", credentials=credentials, cache_discovery=False)
-    events_result = (
-        service.events()
-        .list(
-            calendarId=calendar_id,
-            maxResults=max_results,
-            orderBy="startTime",
-            singleEvents=True,
-            timeMin=datetime.now(UTC).isoformat(),
+    try:
+        events_result = (
+            service.events()
+            .list(
+                calendarId=calendar_id,
+                maxResults=settings.google_calendar_sync_max_results,
+                orderBy="startTime",
+                singleEvents=True,
+                timeMin=time_min.isoformat(),
+                timeMax=time_max.isoformat(),
+            )
+            .execute()
         )
-        .execute()
-    )
+    except HttpError as error:
+        raise GoogleCalendarSyncError(
+            f"Google Calendar API request failed: {error.reason}"
+        ) from error
     calendar_events = tuple(
         _calendar_event_from_google_event(calendar_id, event)
         for event in events_result.get("items", [])
@@ -168,6 +180,8 @@ async def sync_google_calendar_events(
     synced_count = await upsert_calendar_events(calendar_events)
     return GoogleCalendarSyncResult(
         calendar_id=calendar_id,
+        time_min=time_min,
+        time_max=time_max,
         synced_count=synced_count,
         event_ids=[event.id for event in calendar_events],
     )

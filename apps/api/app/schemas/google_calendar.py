@@ -34,5 +34,7 @@ class GoogleCalendarSyncResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     calendar_id: str = Field(min_length=1)
+    time_min: datetime
+    time_max: datetime
     synced_count: int = Field(ge=0)
     event_ids: list[str] = Field(default_factory=list)

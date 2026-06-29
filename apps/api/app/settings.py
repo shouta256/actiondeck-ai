@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     google_calendar_scopes: str = (
         "https://www.googleapis.com/auth/calendar.readonly"
     )
+    google_calendar_sync_days: int = 90
+    google_calendar_sync_max_results: int = 100
 
     @property
     def asyncpg_database_url(self) -> str:

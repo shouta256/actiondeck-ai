@@ -103,8 +103,10 @@ GOOGLE_OAUTH_CLIENT_ID=your_client_id
 GOOGLE_OAUTH_CLIENT_SECRET=your_client_secret
 GOOGLE_OAUTH_REDIRECT_URI=http://127.0.0.1:8000/integrations/google-calendar/oauth/callback
 GOOGLE_CALENDAR_SCOPES=https://www.googleapis.com/auth/calendar.readonly
+GOOGLE_CALENDAR_SYNC_DAYS=90
+GOOGLE_CALENDAR_SYNC_MAX_RESULTS=100
 ```
 
 `GEMINI_API_KEY` が設定されている場合、Agent RunはGeminiでAction Card JSONを生成し、Pydantic schemaで検証します。検証に失敗した場合やAPIキーがない場合は、deterministicなテンプレートにfallbackします。どちらで生成されたかは `generation_mode` と `fallback_reason` で確認できます。
 
-Google Calendar OAuthはread-only scopeに限定します。tokenはローカルDBの `oauth_connections` に保存します。MVPのローカル開発用実装であり、本番運用ではtoken暗号化、ユーザー分離、失効処理が必要です。
+Google Calendar OAuthはread-only scopeに限定します。同期対象はデフォルトで今後90日分に制限し、繰り返し予定が何年分も展開されることを防ぎます。tokenはローカルDBの `oauth_connections` に保存します。MVPのローカル開発用実装であり、本番運用ではtoken暗号化、ユーザー分離、失効処理が必要です。
