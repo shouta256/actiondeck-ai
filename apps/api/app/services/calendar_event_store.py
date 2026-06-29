@@ -1,6 +1,7 @@
 import asyncio
 import json
 from collections.abc import Awaitable
+from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
 from threading import Thread
@@ -29,6 +30,18 @@ def list_calendar_events() -> tuple[CalendarEvent, ...]:
         return list_seed_calendar_events()
 
     return events if events else list_seed_calendar_events()
+
+
+def list_upcoming_calendar_events(limit: int = 10) -> tuple[CalendarEvent, ...]:
+    now = datetime.now()
+    events = [
+        event
+        for event in list_calendar_events()
+        if event.end.replace(tzinfo=None) >= now
+    ]
+    return tuple(
+        sorted(events, key=lambda event: event.start.replace(tzinfo=None))[:limit]
+    )
 
 
 def seed_calendar_events(calendar_events: tuple[CalendarEvent, ...]) -> int:

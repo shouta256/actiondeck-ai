@@ -87,6 +87,7 @@ Google Calendar接続:
 curl http://127.0.0.1:8000/integrations/google-calendar/oauth/start
 curl http://127.0.0.1:8000/integrations/google-calendar/status
 curl -X POST http://127.0.0.1:8000/integrations/google-calendar/sync
+curl 'http://127.0.0.1:8000/calendar-events/upcoming?limit=5'
 ```
 
 ## Gemini設定

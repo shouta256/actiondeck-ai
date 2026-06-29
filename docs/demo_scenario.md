@@ -63,7 +63,7 @@ Approval Gate
 ## 画面で見る場所
 
 1. `/` で `Demo Scenarios` を見る
-2. 右側のGoogle Calendar panelでread-only接続と同期状態を見る
+2. 右側のGoogle Calendar panelでread-only接続、同期状態、同期済み予定を見る
 3. `面談日程調整` から `action_001` を開く
 4. 画面上部の `Agent Decision` で、Actions、Evidence、Approval、Workflowを見る
 5. Source Messageで元メールを見る

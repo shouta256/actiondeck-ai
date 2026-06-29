@@ -196,11 +196,12 @@ curl http://127.0.0.1:8000/integrations/google-calendar/oauth/start
 
 ```bash
 curl -X POST http://127.0.0.1:8000/integrations/google-calendar/sync
+curl 'http://127.0.0.1:8000/calendar-events/upcoming?limit=5'
 ```
 
 tokenはローカルDBの `oauth_connections` に保存します。MVPではread-only scopeかつローカル開発用の保存です。本番運用ではtoken暗号化、ユーザー分離、失効処理が必要です。
 
-同期対象はデフォルトで今後90日分です。繰り返し予定が何年分も展開されないよう、`GOOGLE_CALENDAR_SYNC_DAYS` で期間を制限しています。
+同期対象はデフォルトで今後90日分です。繰り返し予定が何年分も展開されないよう、`GOOGLE_CALENDAR_SYNC_DAYS` で期間を制限しています。同期済みの予定はGoogle Calendar panelのUpcoming Events、または `/calendar-events/upcoming` APIで確認できます。
 
 ## 開発チェック
 

@@ -3,6 +3,8 @@
 import { useEffect, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { listUpcomingCalendarEvents } from "@/features/calendar-events/api";
+import type { CalendarEvent } from "@/features/calendar-events/types";
 
 import {
   getGoogleCalendarStatus,
@@ -35,6 +37,36 @@ function formatDateTime(value?: string | null) {
   }).format(date);
 }
 
+function formatEventTimeRange(event: CalendarEvent) {
+  const start = new Date(event.start);
+  const end = new Date(event.end);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return "-";
+  }
+
+  const date = new Intl.DateTimeFormat(undefined, {
+    month: "2-digit",
+    day: "2-digit",
+    timeZoneName: "short",
+  }).format(start);
+  const time = new Intl.DateTimeFormat(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  return `${date} ${time.format(start)}-${time.format(end)}`;
+}
+
+function formatSource(source: string) {
+  if (source === "google_calendar") {
+    return "Google";
+  }
+  if (source === "local_seed") {
+    return "Seed";
+  }
+  return source;
+}
+
 function Field({
   label,
   value,
@@ -56,6 +88,7 @@ export function GoogleCalendarPanel() {
   const [status, setStatus] = useState<GoogleCalendarConnectionStatus | null>(
     null,
   );
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [syncResult, setSyncResult] = useState<GoogleCalendarSyncResult | null>(
     null,
   );
@@ -68,6 +101,11 @@ export function GoogleCalendarPanel() {
         setStatus(await getGoogleCalendarStatus());
       } catch {
         setStatus(null);
+      }
+      try {
+        setCalendarEvents(await listUpcomingCalendarEvents(5));
+      } catch {
+        setCalendarEvents([]);
       }
     });
   }, []);
@@ -91,6 +129,7 @@ export function GoogleCalendarPanel() {
         const nextSyncResult = await syncGoogleCalendar();
         setSyncResult(nextSyncResult);
         setStatus(await getGoogleCalendarStatus());
+        setCalendarEvents(await listUpcomingCalendarEvents(5));
       } catch {
         setErrorMessage("Google Calendar sync failed.");
       }
@@ -151,6 +190,42 @@ export function GoogleCalendarPanel() {
           </dl>
         </div>
       ) : null}
+
+      <div className="mt-4 border-t border-neutral-100 pt-4">
+        <h3 className="text-xs font-semibold text-neutral-700">
+          Upcoming Events
+        </h3>
+        {calendarEvents.length > 0 ? (
+          <ul className="mt-3 divide-y divide-neutral-100">
+            {calendarEvents.map((event) => (
+              <li className="py-3" key={event.id}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-neutral-950">
+                      {event.title}
+                    </p>
+                    <p className="mt-1 text-xs text-neutral-500">
+                      {formatEventTimeRange(event)}
+                    </p>
+                    {event.location ? (
+                      <p className="mt-1 truncate text-xs text-neutral-500">
+                        {event.location}
+                      </p>
+                    ) : null}
+                  </div>
+                  <span className="shrink-0 rounded border border-neutral-200 bg-neutral-50 px-2 py-1 font-mono text-[11px] text-neutral-600">
+                    {formatSource(event.source)}
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-3 text-sm leading-5 text-neutral-500">
+            同期済みの予定はまだありません。
+          </p>
+        )}
+      </div>
 
       {errorMessage ? (
         <p className="mt-3 text-sm text-red-700">{errorMessage}</p>
