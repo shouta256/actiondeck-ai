@@ -23,7 +23,7 @@ Geminiが使えない場合やschema検証に失敗した場合は、determinist
 
 Evidence検索では、PostgreSQLの `evidence_items` テーブルに `embedding vector(768)` を保存し、pgvectorのcosine距離でtop-k検索します。`EMBEDDING_PROVIDER=gemini` の場合はGemini Embeddingを使い、APIキー未設定やAPI失敗時はlocal deterministic embeddingへfallbackします。DB未起動、未seed、pgvector検索失敗時はseed JSONのkeyword scoringにfallbackします。
 
-Calendar確認では、PostgreSQLの `calendar_events` テーブルにseedした予定をread-onlyで参照します。Safety CheckでInbox本文の候補日時と既存予定を比較し、衝突や空き状況をAction Cardの `safety_notes` とTraceの `calendar_availability_check` に残します。MVPでは予定作成・更新は行いません。
+Calendar確認では、PostgreSQLの `calendar_events` テーブルにseedまたはGoogle Calendar read-only OAuthで同期した予定を参照します。Safety CheckでInbox本文の候補日時と既存予定を比較し、衝突や空き状況をAction Cardの `safety_notes` とTraceの `calendar_availability_check` に残します。MVPでは予定作成・更新は行いません。
 
 ## 起動
 
@@ -81,6 +81,14 @@ curl 'http://127.0.0.1:8000/eval/action-cards?mode=graph'
 curl 'http://127.0.0.1:8000/eval/action-cards?mode=gemini'
 ```
 
+Google Calendar接続:
+
+```bash
+curl http://127.0.0.1:8000/integrations/google-calendar/oauth/start
+curl http://127.0.0.1:8000/integrations/google-calendar/status
+curl -X POST http://127.0.0.1:8000/integrations/google-calendar/sync
+```
+
 ## Gemini設定
 
 Gemini APIキーはコミットしません。`apps/api/.env.example` を参考に、ローカルの `apps/api/.env` に値を書きます。
@@ -91,6 +99,12 @@ GEMINI_MODEL=gemini-3.1-flash-lite
 EMBEDDING_PROVIDER=local
 GEMINI_EMBEDDING_MODEL=gemini-embedding-2
 EMBEDDING_DIMENSIONS=768
+GOOGLE_OAUTH_CLIENT_ID=your_client_id
+GOOGLE_OAUTH_CLIENT_SECRET=your_client_secret
+GOOGLE_OAUTH_REDIRECT_URI=http://127.0.0.1:8000/integrations/google-calendar/oauth/callback
+GOOGLE_CALENDAR_SCOPES=https://www.googleapis.com/auth/calendar.readonly
 ```
 
 `GEMINI_API_KEY` が設定されている場合、Agent RunはGeminiでAction Card JSONを生成し、Pydantic schemaで検証します。検証に失敗した場合やAPIキーがない場合は、deterministicなテンプレートにfallbackします。どちらで生成されたかは `generation_mode` と `fallback_reason` で確認できます。
+
+Google Calendar OAuthはread-only scopeに限定します。tokenはローカルDBの `oauth_connections` に保存します。MVPのローカル開発用実装であり、本番運用ではtoken暗号化、ユーザー分離、失効処理が必要です。

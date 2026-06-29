@@ -30,6 +30,12 @@ from app.schemas.evaluation import (
     ActionCardEvalCaseResult,
     ActionCardEvalRunResult,
 )
+from app.schemas.google_calendar import (
+    GoogleCalendarConnectionStatus,
+    GoogleCalendarOAuthCallbackResponse,
+    GoogleCalendarOAuthStartResponse,
+    GoogleCalendarSyncResult,
+)
 from app.schemas.inbox_item import InboxChannel, InboxItem
 from app.schemas.review_event import ReviewActor, ReviewEvent
 
@@ -56,6 +62,10 @@ __all__ = [
     "CalendarEvent",
     "EvidenceItem",
     "EvidenceSourceType",
+    "GoogleCalendarConnectionStatus",
+    "GoogleCalendarOAuthCallbackResponse",
+    "GoogleCalendarOAuthStartResponse",
+    "GoogleCalendarSyncResult",
     "InboxChannel",
     "InboxItem",
     "Priority",

@@ -44,3 +44,23 @@ CREATE TABLE IF NOT EXISTS calendar_events (
 
 CREATE INDEX IF NOT EXISTS idx_calendar_events_time_range
   ON calendar_events (start_at, end_at);
+
+CREATE TABLE IF NOT EXISTS oauth_states (
+  state text PRIMARY KEY,
+  provider text NOT NULL,
+  code_verifier text,
+  created_at timestamptz NOT NULL,
+  consumed_at timestamptz
+);
+
+CREATE INDEX IF NOT EXISTS idx_oauth_states_provider_created_at
+  ON oauth_states (provider, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS oauth_connections (
+  provider text PRIMARY KEY,
+  token_json jsonb NOT NULL,
+  scopes jsonb NOT NULL,
+  expires_at timestamptz,
+  connected_at timestamptz NOT NULL,
+  updated_at timestamptz NOT NULL
+);

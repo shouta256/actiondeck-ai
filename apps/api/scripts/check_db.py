@@ -2,13 +2,21 @@ import asyncio
 
 import asyncpg
 
+from app.services.oauth_connection_store import ensure_oauth_tables
 from app.settings import get_settings
 
 
 async def main() -> None:
     connection = await asyncpg.connect(get_settings().asyncpg_database_url)
     try:
-        for table_name in ("agent_runs", "evidence_items", "calendar_events"):
+        await ensure_oauth_tables(connection)
+        for table_name in (
+            "agent_runs",
+            "evidence_items",
+            "calendar_events",
+            "oauth_states",
+            "oauth_connections",
+        ):
             found_table = await connection.fetchval(
                 f"select to_regclass('public.{table_name}')"
             )

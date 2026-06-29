@@ -35,6 +35,10 @@ def seed_calendar_events(calendar_events: tuple[CalendarEvent, ...]) -> int:
     return _run_blocking(_seed_calendar_events(calendar_events))
 
 
+async def upsert_calendar_events(calendar_events: tuple[CalendarEvent, ...]) -> int:
+    return await _upsert_calendar_events(calendar_events)
+
+
 async def _list_calendar_events() -> tuple[CalendarEvent, ...]:
     connection = await _connect()
     try:
@@ -59,6 +63,10 @@ async def _list_calendar_events() -> tuple[CalendarEvent, ...]:
 
 
 async def _seed_calendar_events(calendar_events: tuple[CalendarEvent, ...]) -> int:
+    return await _upsert_calendar_events(calendar_events)
+
+
+async def _upsert_calendar_events(calendar_events: tuple[CalendarEvent, ...]) -> int:
     connection = await _connect()
     try:
         await _ensure_calendar_events_table(connection)
