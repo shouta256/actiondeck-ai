@@ -4,9 +4,9 @@ Agent Workflowは、Inbox ItemからAction Cardを生成する処理です。
 
 MVPではまずAgentの責務境界を明確にするため、`apps/api/app/agents` に小さなPython workflowを実装しました。これにより、画面・DB・評価までつながる縦スライスを先に完成させています。
 
-Phase 2では、この線形workflowをLangGraphへ移行中です。単純置換ではなく、conditional edge (情報不足 / 低リスク / 高リスク)、fallback、approval gate、trace保持までを設計に含めます。
+Phase 2では、この線形workflowをLangGraph runnerへ移行しました。単純置換ではなく、conditional edge、fallback、Critic Check、approval gate、trace保持までを設計に含めています。
 
-最初の移行ステップとして、既存nodeをLangGraph上で実行するrunnerを追加しました。現在の標準Agent Run APIはLangGraph runnerを使います。LangGraph runner側では `ignore` / `missing_info` routeで `retrieval` / `planning` をスキップして `critic` に進むconditional edgeを接続しています。`conflicting_evidence` routeでは根拠検索までは実行し、返信案や予定案を確定する `planning` はスキップします。`low_risk_todo` routeも根拠検索までは実行し、LLM Planningは省略して安定したtemplateを使います。Plannerが出したAction Card、またはskip routeで使うtemplate Action Cardは、Critic Checkで根拠・提案内容・承認境界を検査してからSafety Checkへ渡します。最後に `approval_gate` を通し、AIが外部アクションを実行せずユーザー承認で止まる境界をTraceに残します。`deterministic` 評価modeではlegacy Python workflowを残し、Graph移行前後の比較に使えるようにしています。
+現在の標準Agent Run APIはLangGraph runnerを使います。`ignore` / `missing_info` routeでは `retrieval` / `planning` をスキップして `critic` に進みます。`conflicting_evidence` / `low_risk_todo` routeでは根拠検索までは実行し、LLM Planningは省略して安定したtemplateを使います。`review_required` routeではPlannerがAction Cardを生成し、Critic Checkで根拠・提案内容・承認境界を検査してからSafety Checkへ渡します。最後に `approval_gate` を通し、AIが外部アクションを実行せずユーザー承認で止まる境界をTraceに残します。
 
 legacy Python workflowは `run_legacy_agent_workflow()` として明示しています。Graph runnerとlegacy workflowが共通で使う実行部品は `runtime.py` に切り出しています。
 
@@ -38,7 +38,7 @@ Action Card
 
 現時点では軽いキーワード判定です。ここでLLMに丸投げせず、後続処理が使うシグナルを明示的に作ります。
 
-Phase 2移行前の準備として、Triageでは `route` も決めます。現時点では出力Action Cardを変えず、`missing_info`、`ignore`、`low_risk_todo`、`review_required`、`conflicting_evidence` のどれに進むべきかをTraceに残します。LangGraph移行時には、このrouteをconditional edgeへ置き換える想定です。
+Triageでは `route` も決めます。`missing_info`、`ignore`、`low_risk_todo`、`review_required`、`conflicting_evidence` のどれに進むべきかをTraceに残し、LangGraphのconditional edgeで後続nodeを切り替えます。
 
 LangGraph runnerでは、まず `ignore` / `missing_info` routeをconditional edgeに接続しています。これらのrouteではTriage後に検索・生成を省略し、template Action CardをCritic Checkへ渡します。それ以外のrouteは `retrieval`、必要に応じて `planning`、`critic`、`safety` の順に進みます。
 
@@ -102,7 +102,7 @@ Geminiを毎回呼ぶ評価は出力が揺れやすく、CIにも向きません
 
 評価modeは3つあります。`deterministic` はlegacy Python workflowをGeminiなしで安定評価し、`gemini` はlegacy Python workflowで手動確認用にGemini生成も含めて評価します。`graph` は標準Agent Runと同じLangGraph runnerをGeminiなしで実行し、同じ評価ケースで回帰確認するためのmodeです。
 
-Phase 2では、LangGraph移行前に `route` も評価対象にしました。さらにGraph modeでは `expected_step_names` と実際のTrace step順を比較し、`missing_info`、`ignore`、`low_risk_todo`、`review_required`、`conflicting_evidence` が期待したworkflow pathを通ったかを確認します。Retrievalが実行されたケースでは、実際に取得したEvidence IDにrequired evidenceが含まれるかも評価します。Critic reportが保存され、Planner出力の問題を検査したこともAgent Run結果で確認できます。Safety noteに期待キーワードが含まれるかも評価し、Calendar availabilityの結果がAction Cardへ反映されたことを確認します。deterministic / gemini modeはlegacy workflowの安定評価を壊さないため、step pathはGraph modeで検証します。
+Graph modeでは `expected_step_names` と実際のTrace step順を比較し、`missing_info`、`ignore`、`low_risk_todo`、`review_required`、`conflicting_evidence` が期待したworkflow pathを通ったかを確認します。Retrievalが実行されたケースでは、実際に取得したEvidence IDにrequired evidenceが含まれるかも評価します。Critic report、Safety note、Calendar availabilityもAgent Run結果で確認できます。deterministic / gemini modeはlegacy workflowの安定評価を壊さないため、step pathはGraph modeで検証します。
 
 ## 実装ファイル
 

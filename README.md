@@ -6,18 +6,14 @@ ActionDeck AIは、**Gmail返信AIではありません。**
 
 メールや予定をそのまま自動処理するのではなく、入力内容を根拠付きの **Action Card** に変換し、返信案・予定候補・ToDo・安全確認を1枚にまとめて、人間が承認できる状態にするAI Agentアプリです。
 
-## 技術構成
+## 何を見てほしいか
 
-- フロントエンド: Next.js 16, React 19, TypeScript, Tailwind CSS v4, shadcn/ui
-- バックエンド: FastAPI, Python, uv
-- データベース: PostgreSQL 18
-- Agent実行: LangGraph runner + Planner/Critic/Safety nodes + legacy Python workflow
-- LLM: Gemini API
-- Evidence検索: PostgreSQL + pgvector + deterministic fallback
-- Calendar確認: local seed / Google Calendar read-only sync
-- 評価: FastAPI endpoint + 評価ケースJSON
-
-MVPでは、まずAgent体験の縦スライスを優先するため、Pythonの小さなworkflowとseed evidenceから始めました。現在の標準Agent RunはLangGraph runnerを使い、routeごとに必要なnodeだけを通します。PlannerがAction Cardを生成し、Criticが根拠・提案内容・承認境界を検査してからSafetyへ渡します。RetrievalではPostgreSQLのpgvector indexを優先し、DB未起動・未seed時は既存のseed scoringにfallbackします。Safety Checkではread-only calendar eventsを見て、候補日時の衝突をAction Cardの安全メモに反映します。Google Calendar OAuthを使う場合も、予定をread-onlyで取得して `calendar_events` に同期するだけで、予定作成・更新は行いません。legacy Python workflowは評価比較用に残しています。
+- `Triage -> Retrieval -> Planning -> Critic -> Safety -> Approval` のAgent workflow
+- LLM出力をPydantic schemaで検証し、壊れたJSONや危険な提案を早めに弾く設計
+- pgvectorによるEvidence検索と、DB/API未接続時にも壊れないdeterministic fallback
+- Google Calendar read-only同期を使った予定衝突チェック
+- 外部アクションを自動実行せず、Human-in-the-loopで止めるApproval Gate
+- 12件の評価ケースによるroute、step path、retrieval recall、safety noteの確認
 
 ```txt
 ignore / missing_info
@@ -30,32 +26,16 @@ review_required
   -> triage -> retrieval -> planning -> critic -> safety -> approval_gate
 ```
 
-## 現在できること
+## 技術構成
 
-1. 手動インポート済みのInbox Itemを表示する
-2. Action Cardの一覧・詳細を表示する
-3. Agent Runを実行し、GeminiでAction Card JSONを生成する
-4. Geminiが使えない場合はdeterministic templateにfallbackする
-5. Agent RunをPostgreSQLの `agent_runs` テーブルに保存する
-6. EvidenceをPostgreSQLの `evidence_items` テーブルにseedし、pgvector top-k検索する
-7. Calendar EventをPostgreSQLの `calendar_events` テーブルにseedし、予定候補の衝突を確認する
-8. Google Calendarをread-only OAuthで接続し、予定を `calendar_events` に同期する
-9. 実行結果としてAction Card、Evidence、Agent Traceを画面に表示する
-10. Action Cardを承認・編集済み・却下としてレビューする
-11. 評価ケース12件でlegacy workflow / LangGraph runner / Gemini生成の出力を測定する
-12. Graph評価ではroute、期待したstep path、Retrieval evidence recall、Critic report、Safety note反映も確認する
-
-Agent Workflowの設計は [docs/agent_workflow.md](docs/agent_workflow.md) に整理しています。
-
-## 必要なツール
-
-- Node.js 20.19.0以上
-- npm 10以上
-- Python 3.12以上
-- uv
-- Docker
-
-Next.js 16系の依存パッケージがNode.js 20.19.0以上を要求するため、手元のNode.jsが古い場合は更新してください。
+- フロントエンド: Next.js 16, React 19, TypeScript, Tailwind CSS v4, shadcn/ui
+- バックエンド: FastAPI, Python, uv
+- データベース: PostgreSQL 18
+- Agent実行: LangGraph runner + Planner/Critic/Safety nodes + legacy Python workflow
+- LLM: Gemini API
+- Evidence検索: PostgreSQL + pgvector + Gemini/local embedding fallback
+- Calendar確認: local seed / Google Calendar read-only sync
+- 評価: FastAPI endpoint + 評価ケースJSON + pytest
 
 ## Quick Start
 
@@ -79,23 +59,31 @@ make up
 
 http://localhost:3000 を開きます。
 
-`make demo` はDB起動、DB schema確認、Evidence/Calendar seed、Web build、API smoke test、評価、pytestを実行し、最後に見るべきURLとシナリオを表示します。アプリの起動自体は `make up` で行います。
+`make demo` はDB起動、schema確認、Evidence/Calendar seed、Web build、API smoke test、評価、pytestを実行します。アプリの起動自体は `make up` で行います。
 
-最短デモ:
-
-```bash
-make setup
-make demo
-make up
-```
+## 5分デモ
 
 1. http://localhost:3000 を開く
 2. `予定衝突あり` を開く
 3. `Run agent` を押す
-4. `Availability` と `Safety` を確認する
-5. `/eval?mode=graph` で評価結果を確認する
+4. `Availability`、`Critic Check`、`Run Trace` を確認する
+5. `/eval?mode=graph` でGraph評価を見る
 
-Geminiを使う場合は、`apps/api/.env.example` を参考に `apps/api/.env` にAPIキーを書きます。APIキー未設定でもdeterministic templateにfallbackして動きます。
+詳しい見せ方は [docs/demo_scenario.md](docs/demo_scenario.md) に整理しています。
+
+## 現在できること
+
+- 手動インポート済みのInbox ItemからAction Cardを生成する
+- GeminiでAction Card JSONを生成し、失敗時はdeterministic templateへfallbackする
+- EvidenceをPostgreSQLへseedし、pgvector top-k検索する
+- Agent Run、Evidence、Trace、Critic report、Calendar Availabilityを画面で確認する
+- Action Cardを承認・編集済み・却下としてレビューする
+- Google Calendarをread-only OAuthで接続し、予定を `calendar_events` に同期する
+- 評価ケース12件でlegacy workflow / LangGraph runner / Gemini生成の出力を測定する
+
+## 環境変数
+
+GeminiやGoogle Calendarを使う場合は、`apps/api/.env.example` を参考に `apps/api/.env` を用意します。APIキー未設定でもdeterministic fallbackで動きます。
 
 ```bash
 GEMINI_API_KEY=your_api_key_here
@@ -111,103 +99,6 @@ GOOGLE_CALENDAR_SYNC_DAYS=90
 GOOGLE_CALENDAR_SYNC_MAX_RESULTS=100
 ACTIONDECK_WEB_BASE_URL=http://localhost:3000
 ```
-
-Gemini Embeddingを使う場合は `EMBEDDING_PROVIDER=gemini` にします。APIキー未設定、またはEmbedding API呼び出しに失敗した場合はlocal deterministic embeddingへfallbackします。
-
-## Demo Flow
-
-1. `make setup` で依存関係とローカルDBを準備する
-2. `make demo` でseedと評価が通ることを確認する
-3. `make up` でWebとAPIを起動する
-4. http://localhost:3000 で `予定衝突あり` を開き、`Run agent` を押す
-5. `Availability`、`Safety`、`Review`、`/eval?mode=graph` を確認する
-
-デモシナリオは [docs/demo_scenario.md](docs/demo_scenario.md) に整理しています。
-
-## 個別起動
-
-### フロントエンド
-
-```bash
-make web
-```
-
-http://localhost:3000 を開きます。
-
-WebはServer ComponentからFastAPIを呼びます。APIのURLは `apps/web/.env.local` の `ACTIONDECK_API_BASE_URL` で変更できます。
-
-### バックエンド
-
-```bash
-make api
-```
-
-ヘルスチェック:
-
-```bash
-curl http://127.0.0.1:8000/health
-```
-
-Action Card一覧:
-
-```bash
-curl http://127.0.0.1:8000/action-cards
-```
-
-### PostgreSQL
-
-```bash
-make db-up
-```
-
-停止:
-
-```bash
-make db-down
-```
-
-DBをvolumeごと作り直す場合:
-
-```bash
-make db-reset
-```
-
-EvidenceとCalendar EventをローカルDBへseedする場合:
-
-```bash
-make db-seed
-```
-
-`EMBEDDING_DIMENSIONS` を変えた場合や、既存DBが古い `vector(32)` の場合は、`make db-reset` でDBを作り直してください。Calendar Eventはread-onlyな判断材料として使い、MVPでは予定作成や外部カレンダー更新は行いません。
-
-### Google Calendar read-only OAuth
-
-Google Cloud ConsoleでCalendar APIを有効化し、OAuth ClientのAuthorized redirect URIに以下を登録します。
-
-```txt
-http://127.0.0.1:8000/integrations/google-calendar/oauth/callback
-```
-
-`apps/api/.env` に `GOOGLE_OAUTH_CLIENT_ID` と `GOOGLE_OAUTH_CLIENT_SECRET` を設定したうえで、認可URLを取得します。
-
-Web画面から接続する場合は、http://localhost:3000 のGoogle Calendar panelで `Connect` を押します。同期は同じpanelの `Sync` から実行できます。
-
-curlで確認する場合:
-
-```bash
-curl http://127.0.0.1:8000/integrations/google-calendar/oauth/start
-```
-
-返ってきた `authorization_url` をブラウザで開きます。認可後にcallbackが成功すると、APIのJSON画面ではなく `ACTIONDECK_WEB_BASE_URL` のWeb画面へ戻ります。
-
-```bash
-curl -X POST http://127.0.0.1:8000/integrations/google-calendar/sync
-curl 'http://127.0.0.1:8000/calendar-events/upcoming?limit=5'
-```
-
-tokenはローカルDBの `oauth_connections` に保存します。MVPではread-only scopeかつローカル開発用の保存です。本番運用ではtoken暗号化、ユーザー分離、失効処理が必要です。
-
-同期対象はデフォルトで今後90日分です。繰り返し予定が何年分も展開されないよう、`GOOGLE_CALENDAR_SYNC_DAYS` で期間を制限しています。同期済みの予定はGoogle Calendar panelのUpcoming Events、または `/calendar-events/upcoming` APIで確認できます。
 
 ## 開発チェック
 
@@ -226,38 +117,31 @@ make compose-check
 
 ## CI
 
-GitHub Actionsで、`main`へのpushとpull requestごとに最低限の確認を実行します。
+GitHub Actionsで、`main` へのpushとpull requestごとに以下を確認します。
 
-- Web: 依存関係のインストール、lint、production build
-- API: uvで依存関係を同期し、app smoke test、deterministic/graph評価、pytestを実行
-- API DB: Docker ComposeでPostgreSQL + pgvectorを起動し、DB schema、seed、pgvector retrievalを確認
+- Web: lint、production build
+- API: smoke test、deterministic/graph評価、pytest
+- API DB: PostgreSQL + pgvector起動、schema確認、seed、pgvector retrieval
 - Infra: Docker Compose設定の構文確認
 
-MVPでは自動デプロイやcoverage gateは入れず、mainが壊れていないこと、Agent評価が通ること、DBありの検索基盤が動くことを確認するCIに留めます。
+MVPでは自動デプロイやcoverage gateは入れず、mainが壊れていないこと、Agent評価が通ること、DBありの検索基盤が動くことを確認するCIに留めています。
 
-## ディレクトリ構成
+## ドキュメント
 
-```txt
-apps/
-  web/        # Next.jsフロントエンド
-  api/        # FastAPIバックエンド
-data/
-  seed/       # デモ用の手動インポートデータ
-  eval_cases/ # 評価ケース
-docs/         # 設計メモ
-infra/        # ローカルインフラ設定
-```
+面接官が読むなら、まずこの順番です。
 
-## 現時点であえてやっていないこと
+1. [docs/demo_scenario.md](docs/demo_scenario.md): デモ手順と説明ポイント
+2. [docs/agent_workflow.md](docs/agent_workflow.md): Agent workflowの責務境界
+3. [docs/action_card_schema.md](docs/action_card_schema.md): Action Card schemaの設計意図
+4. [docs/architecture.md](docs/architecture.md): 技術構成と現在地
+
+引き継ぎ用・戦略検討用の長いメモはローカル専用として `.gitignore` 対象にしています。
+
+## あえてやっていないこと
 
 - Gmail、LINEなどの本番OAuth連携
 - 実行アクションの自動送信・自動登録
 - legacy Python workflowの完全削除
-- 外部Embedding APIの品質比較と運用設計
-- 本番デプロイと認証
+- 本番デプロイ、認証、マルチユーザー対応
 
 MVPでは、外部連携の配管よりも「入力から根拠付きAction Cardを作り、ユーザーが承認できる」縦スライスの完成を優先しています。
-
-これらはMVPで「やらない」と決めたものですが、Phase 2では順番を設計して取り込みます。確定順序は、評価ケース拡充 → LangGraph移行 → pgvector → Calendar read-only OAuth → (条件付き)Go sync worker → (最後)Gmail OAuth です。評価ケースは12件まで拡充済みで、pgvectorの最小導入、Gemini Embedding切り替え設定、ローカルCalendar availability確認、Google Calendar read-only OAuthの同期口まで完了しています。次は検索品質比較を厚くするか、提出向けのデプロイへ進む想定です。
-
-Action Card schemaは [docs/action_card_schema.md](docs/action_card_schema.md) に整理しています。

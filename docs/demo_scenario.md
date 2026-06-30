@@ -40,6 +40,9 @@ Retrieval
 Planning
   返信案、予定案、ToDo案をAction Cardにまとめる
 
+Critic Check
+  根拠、提案内容、承認境界を検査する
+
 Safety Check
   メール返信と予定作成はユーザー承認が必要だと確認する
 
@@ -71,7 +74,7 @@ Approval Gate
 7. Latest Agent Runで生成結果を見る
 8. Calendar Availabilityで候補日時ごとの空き・衝突を見る
 9. Run Evidenceで根拠を見る
-10. Run Traceで `Triage -> Retrieval -> Planning -> Safety -> Approval Gate` を見る
+10. Run Traceで `Triage -> Retrieval -> Planning -> Critic -> Safety -> Approval Gate` を見る
 11. ReviewでHuman-in-the-loopを確認する
 12. `/eval` でdeterministic評価を見る
 13. `/eval?mode=graph` でLangGraph runner評価とstep path評価を見る
@@ -100,6 +103,7 @@ Approval Gate
 
 - これはGmail返信AIではなく、承認可能なAction Cardを作るAgentです
 - Agent出力はPydantic schemaで検証します
+- Critic CheckでPlanner出力の根拠、提案内容、承認境界を検査します
 - 根拠とTraceを表示し、AIの判断を後から確認できます
 - 外部アクションは自動実行せず、Human-in-the-loopで止めます
 - LangGraph runnerはroute別に不要なPlanningを省略し、コストと出力ゆれを抑えます
