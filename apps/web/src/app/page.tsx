@@ -1,4 +1,11 @@
 import Link from "next/link";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ChevronRight,
+  ClipboardList,
+  Layers3,
+} from "lucide-react";
 
 import { listActionCards } from "@/features/action-cards/api";
 import type { ActionCard } from "@/features/action-cards/types";
@@ -45,10 +52,6 @@ const DEMO_SCENARIOS: DemoScenario[] = [
   },
 ];
 
-function getDueDate(card: ActionCard) {
-  return card.proposal.todos[0]?.due_date ?? "-";
-}
-
 function buildReviewStats(actionCards: ActionCard[]) {
   const pendingCount = actionCards.filter(
     (card) => card.status === "pending_review",
@@ -65,37 +68,37 @@ function buildReviewStats(actionCards: ActionCard[]) {
   ];
 }
 
-function buildCardSignals(card: ActionCard) {
-  const signals = new Set<string>();
-  const actionSet = new Set(card.actions);
-
-  if (card.evidence_ids.length > 0) {
-    signals.add("evidence");
-  }
-  if (card.approval_required) {
-    signals.add("approval");
-  }
-  if (card.safety_notes.some((note) => note.includes("衝突"))) {
-    signals.add("calendar conflict");
-  }
-  if (actionSet.has("request_missing_info")) {
-    signals.add("missing info");
-  }
-  if (actionSet.has("ignore")) {
-    signals.add("ignore");
-  }
-  if (actionSet.has("create_todo")) {
-    signals.add("todo");
-  }
-
-  return [...signals];
-}
-
 function getScenarioCard(
   actionCards: ActionCard[],
   scenario: DemoScenario,
 ) {
   return actionCards.find((card) => card.source_item_id === scenario.sourceItemId);
+}
+
+function StatusBadge({ card }: { card: ActionCard }) {
+  const hasConflict = card.safety_notes.some((note) => note.includes("衝突"));
+  if (hasConflict) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-md bg-red-100 px-2.5 py-1 text-xs font-medium text-red-900">
+        <AlertTriangle className="size-3.5" />
+        Conflict
+      </span>
+    );
+  }
+  if (card.status === "pending_review") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-md bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-900">
+        <ClipboardList className="size-3.5" />
+        Review
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 rounded-md bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-900">
+      <CheckCircle2 className="size-3.5" />
+      Ready
+    </span>
+  );
 }
 
 async function loadActionCards() {
@@ -125,8 +128,8 @@ export default async function Home() {
   );
 
   return (
-    <main className="min-h-screen bg-neutral-50 text-neutral-950">
-      <header className="border-b border-neutral-200 bg-white">
+    <main className="min-h-screen bg-[#f5f5f7] text-neutral-950">
+      <header className="border-b border-neutral-200/80 bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between px-6">
           <div className="flex items-baseline gap-3">
             <h1 className="text-base font-semibold">ActionDeck AI</h1>
@@ -140,49 +143,43 @@ export default async function Home() {
         </div>
       </header>
 
-      <div className="mx-auto grid w-full max-w-7xl gap-6 px-6 py-6 lg:grid-cols-[1fr_280px]">
+      <div className="mx-auto grid w-full max-w-7xl gap-6 px-6 py-8 lg:grid-cols-[minmax(0,1fr)_300px]">
         <section>
-          <div className="mb-6">
-            <div className="mb-3">
-              <h2 className="text-lg font-semibold">Demo Scenarios</h2>
-              <p className="mt-1 text-sm text-neutral-500">
-                Agentの判断が分かりやすい代表ケースです。
-              </p>
+          <div className="mb-7 rounded-md border border-white bg-white p-6 shadow-sm shadow-neutral-200/70">
+            <div className="mb-5 flex items-start gap-3">
+              <span className="flex size-8 items-center justify-center rounded-md bg-blue-100 text-blue-700">
+                <Layers3 className="size-4" />
+              </span>
+              <div>
+                <h2 className="text-xl font-semibold">Demo Scenarios</h2>
+                <p className="mt-1 text-sm leading-6 text-neutral-500">
+                  まず見るべき代表ケースです。詳細画面で提案、安全確認、承認を確認します。
+                </p>
+              </div>
             </div>
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-2">
               {DEMO_SCENARIOS.map((scenario) => {
                 const card = getScenarioCard(actionCards, scenario);
                 return (
                   <Link
-                    className="rounded-md border border-neutral-200 bg-white p-4 hover:border-neutral-300 hover:bg-neutral-50"
+                    className="group rounded-md bg-neutral-100/70 p-4 transition hover:bg-neutral-200/60"
                     href={card ? `/action-cards/${card.id}` : "/"}
                     key={scenario.sourceItemId}
                   >
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center justify-between gap-3">
                       <div>
-                        <p className="text-sm font-semibold text-neutral-950">
+                        <p className="text-[15px] font-semibold text-neutral-950">
                           {scenario.label}
                         </p>
-                        <p className="mt-1 font-mono text-xs text-neutral-500">
-                          {scenario.sourceItemId}
-                        </p>
                       </div>
-                      <span className="rounded border border-neutral-200 px-2 py-1 font-mono text-[11px] text-neutral-600">
-                        {card?.id ?? "missing"}
-                      </span>
+                      <ChevronRight className="size-4 text-neutral-400 transition group-hover:translate-x-0.5 group-hover:text-neutral-700" />
                     </div>
-                    <p className="mt-3 text-sm leading-6 text-neutral-600">
+                    <p className="mt-2 text-sm leading-6 text-neutral-600">
                       {scenario.description}
                     </p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {scenario.signals.map((signal) => (
-                        <span
-                          className="rounded border border-neutral-200 bg-neutral-50 px-2 py-1 font-mono text-[11px] text-neutral-600"
-                          key={signal}
-                        >
-                          {signal}
-                        </span>
-                      ))}
+                    <div className="mt-3 flex items-center gap-2 text-xs text-neutral-500">
+                      {card ? <StatusBadge card={card} /> : null}
+                      <span>{scenario.signals[0]}</span>
                     </div>
                   </Link>
                 );
@@ -200,89 +197,51 @@ export default async function Home() {
                 <p className="mt-2 text-sm text-red-700">{errorMessage}</p>
               ) : null}
             </div>
-            <button className="h-8 rounded-md border border-neutral-300 bg-white px-3 text-sm font-medium text-neutral-800 hover:bg-neutral-100">
-              Import
-            </button>
           </div>
 
-          <div className="overflow-x-auto rounded-md border border-neutral-200 bg-white">
-            <table className="w-full min-w-[1080px] border-collapse text-left text-sm">
-              <thead className="border-b border-neutral-200 bg-neutral-100 text-xs font-medium uppercase text-neutral-500">
-                <tr>
-                  <th className="px-4 py-3">Title</th>
-                  <th className="px-4 py-3">Actions</th>
-                  <th className="px-4 py-3">Priority</th>
-                  <th className="px-4 py-3">Risk</th>
-                  <th className="px-4 py-3">Confidence</th>
-                  <th className="px-4 py-3">Signals</th>
-                  <th className="px-4 py-3">Due</th>
-                  <th className="px-4 py-3">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {actionCards.length > 0 ? (
-                  actionCards.map((card) => (
-                    <tr
-                      key={card.id}
-                      className="border-b border-neutral-100 last:border-b-0"
+          <div className="rounded-md border border-white bg-white p-3 shadow-sm shadow-neutral-200/70">
+            {actionCards.length > 0 ? (
+              <ul className="divide-y divide-neutral-100">
+                {actionCards.map((card) => (
+                  <li key={card.id}>
+                    <Link
+                      className="group flex items-center justify-between gap-4 rounded-md px-3 py-4 hover:bg-neutral-100/70"
+                      href={`/action-cards/${card.id}`}
                     >
-                      <td className="px-4 py-3 font-medium text-neutral-950">
-                        <Link
-                          className="underline-offset-4 hover:underline"
-                          href={`/action-cards/${card.id}`}
-                        >
-                          {card.title}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3 font-mono text-xs text-neutral-600">
-                        {card.actions.join(", ")}
-                      </td>
-                      <td className="px-4 py-3 text-neutral-700">
-                        {card.priority}
-                      </td>
-                      <td className="px-4 py-3 text-neutral-700">
-                        {card.risk_level}
-                      </td>
-                      <td className="px-4 py-3 text-neutral-700">
-                        {card.confidence.toFixed(2)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex max-w-64 flex-wrap gap-1.5">
-                          {buildCardSignals(card).map((signal) => (
-                            <span
-                              className="rounded border border-neutral-200 bg-neutral-50 px-2 py-1 font-mono text-[11px] text-neutral-600"
-                              key={signal}
-                            >
-                              {signal}
-                            </span>
-                          ))}
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="truncate text-[15px] font-semibold text-neutral-950">
+                            {card.title}
+                          </p>
+                          <StatusBadge card={card} />
                         </div>
-                      </td>
-                      <td className="px-4 py-3 text-neutral-700">
-                        {getDueDate(card)}
-                      </td>
-                      <td className="px-4 py-3 font-mono text-xs text-neutral-700">
-                        {card.status}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td className="px-4 py-6 text-sm text-neutral-500" colSpan={8}>
-                      表示できるAction Cardがありません。
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                        <p className="mt-1 line-clamp-1 text-sm text-neutral-500">
+                          {card.summary}
+                        </p>
+                      </div>
+                      <ChevronRight className="size-4 shrink-0 text-neutral-400 transition group-hover:translate-x-0.5 group-hover:text-neutral-700" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="px-3 py-6 text-sm text-neutral-500">
+                表示できるAction Cardがありません。
+              </p>
+            )}
           </div>
         </section>
 
-        <aside className="space-y-4">
+        <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
           <GoogleCalendarPanel />
 
-          <section className="rounded-md border border-neutral-200 bg-white p-4">
-            <h2 className="text-sm font-semibold">Review Queue</h2>
+          <section className="rounded-md border border-white bg-white p-5 shadow-sm shadow-neutral-200/70">
+            <div className="flex items-center gap-3">
+              <span className="flex size-7 items-center justify-center rounded-md bg-neutral-100 text-neutral-700">
+                <ClipboardList className="size-4" />
+              </span>
+              <h2 className="text-[15px] font-semibold">Review Queue</h2>
+            </div>
             <dl className="mt-4 divide-y divide-neutral-100">
               {reviewStats.map(([label, value]) => (
                 <div
@@ -294,9 +253,6 @@ export default async function Home() {
                 </div>
               ))}
             </dl>
-            <p className="mt-4 border-t border-neutral-100 pt-4 text-sm leading-6 text-neutral-500">
-              FastAPIのAction Card APIから取得したデータを表示しています。
-            </p>
           </section>
         </aside>
       </div>

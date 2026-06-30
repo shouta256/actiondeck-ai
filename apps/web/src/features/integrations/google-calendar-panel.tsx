@@ -1,5 +1,6 @@
 "use client";
 
+import { CalendarDays, RefreshCw } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -139,24 +140,29 @@ export function GoogleCalendarPanel() {
   const connected = Boolean(status?.connected);
 
   return (
-    <section className="rounded-md border border-neutral-200 bg-white p-4">
+    <section className="rounded-md border border-white bg-white p-5 shadow-sm shadow-neutral-200/70">
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-sm font-semibold">Google Calendar</h2>
-          <p className="mt-1 text-sm leading-5 text-neutral-500">
-            Read-onlyで予定を同期し、Safety Checkの衝突判定に使います。
-          </p>
+        <div className="flex items-start gap-3">
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-blue-100 text-blue-700">
+            <CalendarDays className="size-4" />
+          </span>
+          <div>
+            <h2 className="text-[15px] font-semibold">Google Calendar</h2>
+            <p className="mt-1 text-sm leading-5 text-neutral-500">
+              Safety Checkに使う予定です。
+            </p>
+          </div>
         </div>
-        <span className="rounded border border-neutral-200 bg-neutral-50 px-2 py-1 font-mono text-[11px] text-neutral-600">
+        <span
+          className={
+            connected
+              ? "rounded-md bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-900"
+              : "rounded-md bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-700"
+          }
+        >
           {connected ? "connected" : "not connected"}
         </span>
       </div>
-
-      <dl className="mt-4 divide-y divide-neutral-100">
-        <Field label="Scope" value={status?.scopes[0] ?? "-"} />
-        <Field label="Expires" value={formatDateTime(status?.expires_at)} />
-        <Field label="Updated" value={formatDateTime(status?.updated_at)} />
-      </dl>
 
       <div className="mt-4 grid gap-2">
         <Button
@@ -175,9 +181,27 @@ export function GoogleCalendarPanel() {
           type="button"
           variant="outline"
         >
+          <RefreshCw className="size-4" />
           {isPending ? "Working" : "Sync"}
         </Button>
       </div>
+
+      <details className="group mt-4 border-t border-neutral-100 pt-4">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
+          <span className="text-sm font-medium text-neutral-800">
+            Connection details
+          </span>
+          <span className="text-sm font-medium text-blue-600">
+            <span className="group-open:hidden">Show</span>
+            <span className="hidden group-open:inline">Hide</span>
+          </span>
+        </summary>
+        <dl className="mt-3 divide-y divide-neutral-100">
+          <Field label="Scope" value={status?.scopes[0] ?? "-"} />
+          <Field label="Expires" value={formatDateTime(status?.expires_at)} />
+          <Field label="Updated" value={formatDateTime(status?.updated_at)} />
+        </dl>
+      </details>
 
       {syncResult ? (
         <div className="mt-4 border-t border-neutral-100 pt-4">
@@ -192,14 +216,12 @@ export function GoogleCalendarPanel() {
       ) : null}
 
       <div className="mt-4 border-t border-neutral-100 pt-4">
-        <h3 className="text-xs font-semibold text-neutral-700">
-          Upcoming Events
-        </h3>
+        <h3 className="text-sm font-semibold text-neutral-900">Upcoming</h3>
         {calendarEvents.length > 0 ? (
-          <ul className="mt-3 divide-y divide-neutral-100">
-            {calendarEvents.map((event) => (
+          <ul className="mt-3 space-y-2">
+            {calendarEvents.slice(0, 3).map((event) => (
               <li className="py-3" key={event.id}>
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start justify-between gap-3 rounded-md bg-neutral-100/70 p-3">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-neutral-950">
                       {event.title}
@@ -213,7 +235,7 @@ export function GoogleCalendarPanel() {
                       </p>
                     ) : null}
                   </div>
-                  <span className="shrink-0 rounded border border-neutral-200 bg-neutral-50 px-2 py-1 font-mono text-[11px] text-neutral-600">
+                  <span className="shrink-0 rounded-md bg-white px-2 py-1 text-xs font-medium text-neutral-600">
                     {formatSource(event.source)}
                   </span>
                 </div>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BarChart3, CheckCircle2, FlaskConical, XCircle } from "lucide-react";
 
 import { getActionCardEvalResult } from "@/features/evaluation/api";
 import type {
@@ -35,10 +36,36 @@ function formatGenerationMode(
 function formatStepPath(
   steps: ActionCardEvalRunResult["cases"][number]["actual_step_names"],
 ) {
-  return steps.length > 0 ? steps.join(" → ") : "-";
+  return steps.length > 0 ? steps.join(" -> ") : "-";
 }
 
-function buildMetrics(result: ActionCardEvalRunResult) {
+function parseEvalMode(value: string | undefined): ActionCardEvalMode {
+  if (value === "gemini" || value === "graph") {
+    return value;
+  }
+  return "deterministic";
+}
+
+function evalModeDescription(mode: ActionCardEvalMode) {
+  if (mode === "gemini") {
+    return "Gemini modeは手動確認用です。APIキー未設定時はtemplate fallbackで評価します。";
+  }
+  if (mode === "graph") {
+    return "Graph modeはLangGraph runnerの分岐と評価ケースの整合性を確認します。";
+  }
+  return "Deterministic modeはCI向けの安定評価です。Geminiを呼ばずに評価します。";
+}
+
+function buildPrimaryMetrics(result: ActionCardEvalRunResult) {
+  return [
+    ["Passed", `${result.passed_cases}/${result.total_cases}`],
+    ["Schema", formatRate(result.schema_valid_rate)],
+    ["Route", formatRate(result.route_match_rate)],
+    ["Retrieval", formatRate(result.retrieval_recall)],
+  ];
+}
+
+function buildAllMetrics(result: ActionCardEvalRunResult) {
   return [
     ["Mode", result.mode],
     ["LLM configured", formatBoolean(result.llm_configured)],
@@ -61,23 +88,6 @@ function buildMetrics(result: ActionCardEvalRunResult) {
   ];
 }
 
-function parseEvalMode(value: string | undefined): ActionCardEvalMode {
-  if (value === "gemini" || value === "graph") {
-    return value;
-  }
-  return "deterministic";
-}
-
-function evalModeDescription(mode: ActionCardEvalMode) {
-  if (mode === "gemini") {
-    return "Gemini modeは手動確認用です。APIキーが未設定、またはGemini生成に失敗した場合はtemplate fallbackで評価します。";
-  }
-  if (mode === "graph") {
-    return "Graph modeはLangGraph runnerの移行確認用です。Geminiを呼ばず、Graph上の分岐と既存評価ケースの整合性を確認します。";
-  }
-  return "Deterministic modeはCI向けの安定した評価です。Geminiを呼ばずにtemplate fallbackで評価します。";
-}
-
 async function loadEvalResult(mode: ActionCardEvalMode) {
   try {
     return {
@@ -96,11 +106,12 @@ export default async function EvalPage({ searchParams }: EvalPageProps) {
   const { mode: rawMode } = await searchParams;
   const mode = parseEvalMode(rawMode);
   const { result, errorMessage } = await loadEvalResult(mode);
-  const metrics = result ? buildMetrics(result) : [];
+  const primaryMetrics = result ? buildPrimaryMetrics(result) : [];
+  const allMetrics = result ? buildAllMetrics(result) : [];
 
   return (
-    <main className="min-h-screen bg-neutral-50 text-neutral-950">
-      <header className="border-b border-neutral-200 bg-white">
+    <main className="min-h-screen bg-[#f5f5f7] text-neutral-950">
+      <header className="border-b border-neutral-200/80 bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between px-6">
           <div className="flex items-baseline gap-3">
             <Link className="text-base font-semibold" href="/">
@@ -114,216 +125,161 @@ export default async function EvalPage({ searchParams }: EvalPageProps) {
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-7xl px-6 py-6">
-        <div className="mb-5">
-          <h1 className="text-xl font-semibold">Action Card Evaluation</h1>
-          <p className="mt-1 text-sm text-neutral-500">
-            評価ケースごとにAgent Workflowを実行し、期待値と比較します。
-          </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Link
-              className={`rounded border px-3 py-1.5 text-sm ${
-                mode === "deterministic"
-                  ? "border-neutral-950 bg-neutral-950 text-white"
-                  : "border-neutral-200 bg-white text-neutral-700"
-              }`}
-              href="/eval?mode=deterministic"
-            >
-              Deterministic
-            </Link>
-            <Link
-              className={`rounded border px-3 py-1.5 text-sm ${
-                mode === "gemini"
-                  ? "border-neutral-950 bg-neutral-950 text-white"
-                  : "border-neutral-200 bg-white text-neutral-700"
-              }`}
-              href="/eval?mode=gemini"
-            >
-              Gemini
-            </Link>
-            <Link
-              className={`rounded border px-3 py-1.5 text-sm ${
-                mode === "graph"
-                  ? "border-neutral-950 bg-neutral-950 text-white"
-                  : "border-neutral-200 bg-white text-neutral-700"
-              }`}
-              href="/eval?mode=graph"
-            >
-              Graph
-            </Link>
+      <div className="mx-auto w-full max-w-7xl px-6 py-8">
+        <section className="mb-6 rounded-md border border-white bg-white p-6 shadow-sm shadow-neutral-200/70">
+          <div className="flex flex-wrap items-start justify-between gap-5">
+            <div className="max-w-3xl">
+              <p className="text-sm font-medium text-blue-600">Evaluation</p>
+              <h1 className="mt-2 text-2xl font-semibold">
+                Action Card Evaluation
+              </h1>
+              <p className="mt-3 text-base leading-7 text-neutral-700">
+                Agent Workflowを評価ケースで確認します。最初は合格率と主要指標だけを見ます。
+              </p>
+            </div>
+            <span className="flex size-10 items-center justify-center rounded-md bg-blue-100 text-blue-700">
+              <FlaskConical className="size-5" />
+            </span>
           </div>
-          <p className="mt-2 text-xs text-neutral-500">
+
+          <div className="mt-5 flex flex-wrap gap-2">
+            {(["deterministic", "graph", "gemini"] as const).map((evalMode) => (
+              <Link
+                className={`rounded-md px-3 py-1.5 text-sm font-medium ${
+                  mode === evalMode
+                    ? "bg-blue-600 text-white"
+                    : "bg-neutral-100 text-neutral-700"
+                }`}
+                href={`/eval?mode=${evalMode}`}
+                key={evalMode}
+              >
+                {evalMode}
+              </Link>
+            ))}
+          </div>
+
+          <p className="mt-3 text-sm leading-6 text-neutral-500">
             {evalModeDescription(mode)}
           </p>
           {errorMessage ? (
-            <p className="mt-2 text-sm text-red-700">{errorMessage}</p>
+            <p className="mt-3 text-sm text-red-700">{errorMessage}</p>
           ) : null}
-        </div>
+        </section>
 
-        <section className="rounded-md border border-neutral-200 bg-white p-5">
-          <h2 className="text-sm font-semibold">Summary</h2>
+        <section className="rounded-md border border-white bg-white p-5 shadow-sm shadow-neutral-200/70">
+          <div className="flex items-center gap-3">
+            <span className="flex size-7 items-center justify-center rounded-md bg-neutral-100 text-neutral-700">
+              <BarChart3 className="size-4" />
+            </span>
+            <h2 className="text-[15px] font-semibold">Summary</h2>
+          </div>
+
           <dl className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {metrics.map(([label, value]) => (
-              <div
-                className="rounded border border-neutral-200 bg-neutral-50 p-3"
-                key={label}
-              >
+            {primaryMetrics.map(([label, value]) => (
+              <div className="rounded-md bg-neutral-100/70 p-4" key={label}>
                 <dt className="text-xs text-neutral-500">{label}</dt>
-                <dd className="mt-2 font-mono text-lg text-neutral-950">
+                <dd className="mt-2 text-2xl font-semibold text-neutral-950">
                   {value}
                 </dd>
               </div>
             ))}
           </dl>
+
+          <details className="group mt-4 border-t border-neutral-100 pt-4">
+            <summary className="flex cursor-pointer list-none items-center justify-between">
+              <span className="text-sm font-medium text-neutral-800">
+                All metrics
+              </span>
+              <span className="text-sm font-medium text-blue-600">
+                <span className="group-open:hidden">Show</span>
+                <span className="hidden group-open:inline">Hide</span>
+              </span>
+            </summary>
+            <dl className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              {allMetrics.map(([label, value]) => (
+                <div className="rounded-md bg-neutral-50 p-3" key={label}>
+                  <dt className="text-xs text-neutral-500">{label}</dt>
+                  <dd className="mt-1 text-sm font-semibold text-neutral-950">
+                    {value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </details>
         </section>
 
-        <section className="mt-6 overflow-x-auto rounded-md border border-neutral-200 bg-white">
-          <table className="w-full min-w-[1580px] border-collapse text-left text-sm">
-            <thead className="border-b border-neutral-200 bg-neutral-100 text-xs font-medium uppercase text-neutral-500">
-              <tr>
-                <th className="px-4 py-3">Case</th>
-                <th className="px-4 py-3">Input</th>
-                <th className="px-4 py-3">Result</th>
-                <th className="px-4 py-3">Generation</th>
-                <th className="px-4 py-3">Route</th>
-                <th className="px-4 py-3">Actions</th>
-                <th className="px-4 py-3">Priority</th>
-                <th className="px-4 py-3">Approval</th>
-                <th className="px-4 py-3">Unsafe</th>
-                <th className="px-4 py-3">Safety</th>
-                <th className="px-4 py-3">Evidence</th>
-                <th className="px-4 py-3">Retrieval</th>
-                <th className="px-4 py-3">Workflow</th>
-                <th className="px-4 py-3">Action Card</th>
-                <th className="px-4 py-3">Failure</th>
-              </tr>
-            </thead>
-            <tbody>
-              {result && result.cases.length > 0 ? (
-                result.cases.map((testCase) => (
-                  <tr
-                    className="border-b border-neutral-100 last:border-b-0"
-                    key={testCase.id}
-                  >
-                    <td className="px-4 py-3 font-mono text-xs text-neutral-700">
-                      {testCase.id}
-                    </td>
-                    <td className="px-4 py-3 font-mono text-xs text-neutral-700">
-                      {testCase.input_item_id}
-                    </td>
-                    <td className="px-4 py-3 font-mono text-xs">
-                      {testCase.passed ? "pass" : "fail"}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-neutral-700">
-                      <div className="font-medium text-neutral-950">
-                        {formatGenerationMode(testCase.generation_mode)}
+        <section className="mt-6 rounded-md border border-white bg-white p-5 shadow-sm shadow-neutral-200/70">
+          <h2 className="text-[15px] font-semibold">Cases</h2>
+          <div className="mt-4">
+            {result && result.cases.length > 0 ? (
+              <ul className="divide-y divide-neutral-100">
+                {result.cases.map((testCase) => (
+                  <li className="py-4" key={testCase.id}>
+                    <details className="group">
+                      <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
+                        <div className="flex min-w-0 items-center gap-3">
+                          {testCase.passed ? (
+                            <CheckCircle2 className="size-5 shrink-0 text-emerald-700" />
+                          ) : (
+                            <XCircle className="size-5 shrink-0 text-red-700" />
+                          )}
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-neutral-950">
+                              {testCase.id}
+                            </p>
+                            <p className="mt-1 text-xs text-neutral-500">
+                              {testCase.input_item_id} /{" "}
+                              {testCase.actual_route ?? "-"}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-sm font-medium text-blue-600">
+                          <span className="group-open:hidden">Show</span>
+                          <span className="hidden group-open:inline">Hide</span>
+                        </span>
+                      </summary>
+                      <div className="mt-4 grid gap-3 rounded-md bg-neutral-100/70 p-4 text-sm md:grid-cols-2">
+                        <div>
+                          <p className="text-xs text-neutral-500">Generation</p>
+                          <p className="mt-1 font-medium">
+                            {formatGenerationMode(testCase.generation_mode)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-neutral-500">Workflow</p>
+                          <p className="mt-1 text-sm leading-6 text-neutral-700">
+                            {formatStepPath(testCase.actual_step_names)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-neutral-500">Retrieval</p>
+                          <p className="mt-1">
+                            {!testCase.retrieval_evaluated
+                              ? "skipped"
+                              : testCase.retrieval_evidence_covered
+                                ? "ok"
+                                : "mismatch"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-neutral-500">Failure</p>
+                          <p className="mt-1 text-sm leading-6 text-neutral-700">
+                            {testCase.failure_reasons.length > 0
+                              ? testCase.failure_reasons.join(", ")
+                              : "-"}
+                          </p>
+                        </div>
                       </div>
-                      {testCase.expected_generation_mode ? (
-                        <div className="mt-1 text-neutral-500">
-                          expected:{" "}
-                          {formatGenerationMode(testCase.expected_generation_mode)}
-                        </div>
-                      ) : null}
-                      {testCase.fallback_reason ? (
-                        <div className="mt-1 max-w-64 text-neutral-500">
-                          {testCase.fallback_reason}
-                        </div>
-                      ) : null}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-neutral-700">
-                      <div className="font-medium text-neutral-950">
-                        {testCase.actual_route ?? "-"}
-                      </div>
-                      {testCase.expected_route ? (
-                        <div className="mt-1 text-neutral-500">
-                          expected: {testCase.expected_route}
-                        </div>
-                      ) : null}
-                    </td>
-                    <td className="px-4 py-3 text-neutral-700">
-                      {testCase.actions_match ? "ok" : "mismatch"}
-                    </td>
-                    <td className="px-4 py-3 text-neutral-700">
-                      {testCase.priority_match ? "ok" : "mismatch"}
-                    </td>
-                    <td className="px-4 py-3 text-neutral-700">
-                      {testCase.approval_required_match ? "ok" : "mismatch"}
-                    </td>
-                    <td className="px-4 py-3 text-neutral-700">
-                      {testCase.unsafe_action_count_match
-                        ? "ok"
-                        : `${testCase.actual_unsafe_action_count}/${testCase.expected_unsafe_action_count}`}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-neutral-700">
-                      {testCase.safety_note_keywords_match
-                        ? "ok"
-                        : testCase.missing_safety_note_keywords.join(", ")}
-                    </td>
-                    <td className="px-4 py-3 text-neutral-700">
-                      {testCase.required_evidence_covered
-                        ? "ok"
-                        : testCase.missing_evidence_ids.join(", ")}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-neutral-700">
-                      <div>
-                        {!testCase.retrieval_evaluated
-                          ? "skipped"
-                          : testCase.retrieval_evidence_covered
-                            ? "ok"
-                            : "mismatch"}
-                      </div>
-                      {testCase.retrieval_evaluated ? (
-                        <div className="mt-1 max-w-64 text-neutral-500">
-                          {testCase.actual_retrieved_evidence_ids.join(", ") ||
-                            "-"}
-                        </div>
-                      ) : null}
-                      {testCase.missing_retrieved_evidence_ids.length > 0 ? (
-                        <div className="mt-1 max-w-64 text-neutral-500">
-                          missing:{" "}
-                          {testCase.missing_retrieved_evidence_ids.join(", ")}
-                        </div>
-                      ) : null}
-                    </td>
-                    <td className="px-4 py-3 text-neutral-700">
-                      <div>
-                        {testCase.schema_valid &&
-                        testCase.agent_steps_completed &&
-                        testCase.step_path_match
-                          ? "ok"
-                          : "mismatch"}
-                      </div>
-                      <div className="mt-1 max-w-72 text-xs text-neutral-500">
-                        {formatStepPath(testCase.actual_step_names)}
-                      </div>
-                      {!testCase.step_path_match ? (
-                        <div className="mt-1 max-w-72 text-xs text-neutral-500">
-                          expected: {formatStepPath(testCase.expected_step_names)}
-                        </div>
-                      ) : null}
-                    </td>
-                    <td className="px-4 py-3 font-mono text-xs text-neutral-700">
-                      {testCase.actual_action_card_id ?? "-"}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-neutral-700">
-                      {testCase.failure_reasons.length > 0
-                        ? testCase.failure_reasons.join(", ")
-                        : "-"}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    className="px-4 py-6 text-sm text-neutral-500"
-                    colSpan={15}
-                  >
-                    表示できる評価結果がありません。
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                    </details>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="py-6 text-sm text-neutral-500">
+                表示できる評価結果がありません。
+              </p>
+            )}
+          </div>
         </section>
       </div>
     </main>

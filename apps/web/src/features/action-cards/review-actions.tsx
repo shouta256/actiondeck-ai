@@ -1,5 +1,6 @@
 "use client";
 
+import { Check, Pencil, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { ComponentProps } from "react";
 import { useState, useTransition } from "react";
@@ -31,6 +32,26 @@ const REVIEW_ACTIONS: ReviewAction[] = [
     variant: "ghost",
   },
 ];
+
+function actionClassName(status: ActionCardReviewStatus) {
+  if (status === "approved") {
+    return "w-full justify-center rounded-md border-blue-600 bg-blue-600 text-white hover:bg-blue-700";
+  }
+  if (status === "rejected") {
+    return "w-full justify-center rounded-md text-red-700 hover:bg-red-50";
+  }
+  return "w-full justify-center rounded-md";
+}
+
+function ActionIcon({ status }: { status: ActionCardReviewStatus }) {
+  if (status === "approved") {
+    return <Check className="size-4" />;
+  }
+  if (status === "edited") {
+    return <Pencil className="size-4" />;
+  }
+  return <X className="size-4" />;
+}
 
 export function ReviewActions({
   actionCardId,
@@ -66,13 +87,14 @@ export function ReviewActions({
       <div className="grid gap-2">
         {REVIEW_ACTIONS.map((action) => (
           <Button
-            className="w-full justify-center rounded-md"
+            className={actionClassName(action.status)}
             disabled={isPending || currentStatus === action.status}
             key={action.status}
             onClick={() => handleStatusChange(action.status)}
             type="button"
             variant={action.variant}
           >
+            <ActionIcon status={action.status} />
             {selectedStatus === action.status ? "Saving" : action.label}
           </Button>
         ))}
