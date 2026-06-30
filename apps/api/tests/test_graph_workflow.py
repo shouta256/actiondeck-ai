@@ -16,9 +16,12 @@ def test_graph_workflow_skips_retrieval_and_planning_for_ignore_route():
     assert result.fallback_reason == "Graph route skipped planning for ignore"
     assert [step.step_name for step in result.agent_steps] == [
         AgentStepName.TRIAGE,
+        AgentStepName.CRITIC_CHECK,
         AgentStepName.SAFETY_CHECK,
         AgentStepName.APPROVAL_GATE,
     ]
+    assert result.critic_report is not None
+    assert result.critic_report.grounded
 
 
 def test_graph_workflow_skips_retrieval_and_planning_for_missing_info_route():
@@ -30,9 +33,12 @@ def test_graph_workflow_skips_retrieval_and_planning_for_missing_info_route():
     assert result.fallback_reason == "Graph route skipped planning for missing_info"
     assert [step.step_name for step in result.agent_steps] == [
         AgentStepName.TRIAGE,
+        AgentStepName.CRITIC_CHECK,
         AgentStepName.SAFETY_CHECK,
         AgentStepName.APPROVAL_GATE,
     ]
+    assert result.critic_report is not None
+    assert result.critic_report.grounded
 
 
 def test_graph_workflow_runs_full_path_for_review_required_route():
@@ -46,9 +52,12 @@ def test_graph_workflow_runs_full_path_for_review_required_route():
         AgentStepName.TRIAGE,
         AgentStepName.EVIDENCE_RETRIEVAL,
         AgentStepName.ACTION_PLANNING,
+        AgentStepName.CRITIC_CHECK,
         AgentStepName.SAFETY_CHECK,
         AgentStepName.APPROVAL_GATE,
     ]
+    assert result.critic_report is not None
+    assert result.critic_report.grounded
 
 
 def test_graph_workflow_adds_calendar_availability_to_safety_notes():
@@ -90,9 +99,12 @@ def test_graph_workflow_skips_planning_for_conflicting_evidence_route():
     assert [step.step_name for step in result.agent_steps] == [
         AgentStepName.TRIAGE,
         AgentStepName.EVIDENCE_RETRIEVAL,
+        AgentStepName.CRITIC_CHECK,
         AgentStepName.SAFETY_CHECK,
         AgentStepName.APPROVAL_GATE,
     ]
+    assert result.critic_report is not None
+    assert result.critic_report.grounded
 
 
 def test_graph_workflow_skips_planning_for_low_risk_todo_route():
@@ -105,9 +117,12 @@ def test_graph_workflow_skips_planning_for_low_risk_todo_route():
     assert [step.step_name for step in result.agent_steps] == [
         AgentStepName.TRIAGE,
         AgentStepName.EVIDENCE_RETRIEVAL,
+        AgentStepName.CRITIC_CHECK,
         AgentStepName.SAFETY_CHECK,
         AgentStepName.APPROVAL_GATE,
     ]
+    assert result.critic_report is not None
+    assert result.critic_report.grounded
 
 
 def _run_graph_workflow_for_inbox(inbox_item_id: str):

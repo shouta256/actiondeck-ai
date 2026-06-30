@@ -5,12 +5,17 @@ import {
   CalendarDays,
   CheckCircle2,
   Info,
+  ShieldCheck,
 } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 
 import { RunAgentButton } from "./run-agent-button";
 import { listAgentRuns } from "./api";
-import type { AgentRunResult, CalendarAvailabilityReport } from "./types";
+import type {
+  AgentCriticReport,
+  AgentRunResult,
+  CalendarAvailabilityReport,
+} from "./types";
 import type { ActionCard } from "@/features/action-cards/types";
 import type { AgentTraceStep } from "@/features/agent-trace/types";
 import type { EvidenceItem } from "@/features/evidence/types";
@@ -239,6 +244,68 @@ function CalendarAvailabilityPanel({
   );
 }
 
+function CriticReportPanel({
+  report,
+}: {
+  report?: AgentCriticReport | null;
+}) {
+  if (!report) {
+    return null;
+  }
+
+  const hasIssues = report.issues.length > 0;
+
+  return (
+    <div className="border-t border-neutral-200 pt-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span
+            className={
+              hasIssues
+                ? "flex size-7 items-center justify-center rounded-md bg-red-100 text-red-700"
+                : "flex size-7 items-center justify-center rounded-md bg-emerald-100 text-emerald-700"
+            }
+          >
+            <ShieldCheck className="size-4" />
+          </span>
+          <div>
+            <h4 className="text-[15px] font-semibold text-neutral-950">
+              Critic Check
+            </h4>
+            <p className="mt-1 text-xs leading-5 text-neutral-500">
+              {hasIssues
+                ? "Planner output needs review."
+                : "Planner output passed grounding checks."}
+            </p>
+          </div>
+        </div>
+        <span
+          className={
+            hasIssues
+              ? "shrink-0 rounded-md bg-red-50 px-2 py-1 text-xs font-semibold text-red-700"
+              : "shrink-0 rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700"
+          }
+        >
+          {hasIssues ? `${report.issues.length} issues` : "grounded"}
+        </span>
+      </div>
+
+      {hasIssues ? (
+        <ul className="mt-3 space-y-2">
+          {report.issues.map((issue) => (
+            <li
+              className="rounded-md bg-red-50 px-3 py-2 text-xs leading-5 text-red-950"
+              key={issue}
+            >
+              {issue}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
+
 function RunTraceList({ steps }: { steps: AgentTraceStep[] }) {
   return (
     <RunDisclosure
@@ -351,6 +418,7 @@ export function AgentRunPanel({ inboxItemId }: { inboxItemId: string }) {
             <CalendarAvailabilityPanel
               report={latestRun.calendar_availability}
             />
+            <CriticReportPanel report={latestRun.critic_report} />
             <RunDetails run={latestRun} />
           </div>
         ) : (

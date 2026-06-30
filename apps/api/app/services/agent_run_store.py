@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS agent_runs (
   agent_steps jsonb NOT NULL,
   evidence_items jsonb NOT NULL,
   calendar_availability jsonb,
+  critic_report jsonb,
   created_at timestamptz NOT NULL
 );
 
@@ -30,6 +31,9 @@ CREATE INDEX IF NOT EXISTS idx_agent_runs_inbox_item_created_at
 
 ALTER TABLE agent_runs
   ADD COLUMN IF NOT EXISTS calendar_availability jsonb;
+
+ALTER TABLE agent_runs
+  ADD COLUMN IF NOT EXISTS critic_report jsonb;
 """
 
 
@@ -52,9 +56,10 @@ async def save_agent_run(agent_run: AgentRunResult) -> AgentRunResult:
                   agent_steps,
                   evidence_items,
                   calendar_availability,
+                  critic_report,
                   created_at
                 )
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9::jsonb, $10::jsonb, $11::jsonb, $12)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9::jsonb, $10::jsonb, $11::jsonb, $12::jsonb, $13)
                 ON CONFLICT (run_id) DO UPDATE SET
                   inbox_item_id = EXCLUDED.inbox_item_id,
                   generation_mode = EXCLUDED.generation_mode,
@@ -66,6 +71,7 @@ async def save_agent_run(agent_run: AgentRunResult) -> AgentRunResult:
                   agent_steps = EXCLUDED.agent_steps,
                   evidence_items = EXCLUDED.evidence_items,
                   calendar_availability = EXCLUDED.calendar_availability,
+                  critic_report = EXCLUDED.critic_report,
                   created_at = EXCLUDED.created_at
                 """,
                 agent_run.run_id,
@@ -85,6 +91,11 @@ async def save_agent_run(agent_run: AgentRunResult) -> AgentRunResult:
                 (
                     json.dumps(agent_run.calendar_availability.model_dump(mode="json"))
                     if agent_run.calendar_availability is not None
+                    else None
+                ),
+                (
+                    json.dumps(agent_run.critic_report.model_dump(mode="json"))
+                    if agent_run.critic_report is not None
                     else None
                 ),
                 agent_run.created_at,
@@ -175,6 +186,7 @@ def _agent_run_from_row(row: asyncpg.Record) -> AgentRunResult:
             "agent_steps": _json_value(row["agent_steps"]),
             "evidence_items": _json_value(row["evidence_items"]),
             "calendar_availability": _json_value(row["calendar_availability"]),
+            "critic_report": _json_value(row["critic_report"]),
             "created_at": row["created_at"],
         }
     )

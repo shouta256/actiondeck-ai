@@ -24,6 +24,12 @@ export type CalendarAvailabilityReport = {
   fallback_reason?: string | null;
 };
 
+export type AgentCriticReport = {
+  grounded: boolean;
+  issues: string[];
+  checked_items: string[];
+};
+
 export type AgentRunResult = {
   run_id: string;
   inbox_item_id: string;
@@ -31,6 +37,7 @@ export type AgentRunResult = {
   agent_steps: AgentTraceStep[];
   evidence_items: EvidenceItem[];
   calendar_availability?: CalendarAvailabilityReport | null;
+  critic_report?: AgentCriticReport | null;
   llm_provider: "gemini";
   llm_model: string;
   llm_configured: boolean;

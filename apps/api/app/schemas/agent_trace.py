@@ -7,6 +7,7 @@ class AgentStepName(StrEnum):
     TRIAGE = "triage"
     EVIDENCE_RETRIEVAL = "evidence_retrieval"
     ACTION_PLANNING = "action_planning"
+    CRITIC_CHECK = "critic_check"
     SAFETY_CHECK = "safety_check"
     APPROVAL_GATE = "approval_gate"
 

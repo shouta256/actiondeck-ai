@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 
 from app.schemas import (
     ActionCard,
+    AgentCriticReport,
     AgentRunGenerationMode,
     EvidenceItem,
     InboxItem,
@@ -21,6 +22,7 @@ class AgentState:
     route: AgentRoute | None = None
     retrieved_evidence_items: tuple[EvidenceItem, ...] = ()
     calendar_availability: CalendarAvailabilityResult | None = None
+    critic_report: AgentCriticReport | None = None
     action_card: ActionCard | None = None
     generation_mode: AgentRunGenerationMode = (
         AgentRunGenerationMode.DETERMINISTIC_TEMPLATE

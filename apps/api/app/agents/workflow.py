@@ -1,6 +1,7 @@
 from app.agents.nodes import (
     approval_gate,
     check_safety,
+    critique_action_card,
     plan_action_card,
     retrieve_evidence,
     triage,
@@ -39,6 +40,7 @@ def run_legacy_agent_workflow(
         run_node(state, triage),
         run_node(state, retrieve_evidence),
         run_node(state, plan_action_card),
+        run_node(state, critique_action_card),
         run_node(state, check_safety),
         run_node(state, approval_gate),
     ]
@@ -67,6 +69,7 @@ def run_legacy_agent_workflow(
         calendar_availability=to_calendar_availability_report(
             state.calendar_availability
         ),
+        critic_report=state.critic_report,
         generation_mode=state.generation_mode,
         fallback_reason=state.fallback_reason,
         route=state.route,

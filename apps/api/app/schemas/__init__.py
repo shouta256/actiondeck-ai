@@ -5,6 +5,7 @@ from app.schemas.agent_trace import (
     AgentToolCall,
     AgentTraceStep,
 )
+from app.schemas.agent_critic import AgentCriticReport
 from app.schemas.agent_run import (
     AgentRunGenerationMode,
     AgentRunRequest,
@@ -55,6 +56,7 @@ __all__ = [
     "ActionKind",
     "ActionProposal",
     "AgentStepName",
+    "AgentCriticReport",
     "AgentRunGenerationMode",
     "AgentRunRequest",
     "AgentRunResult",

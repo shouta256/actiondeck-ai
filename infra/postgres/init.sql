@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS agent_runs (
   action_card jsonb NOT NULL,
   agent_steps jsonb NOT NULL,
   evidence_items jsonb NOT NULL,
+  calendar_availability jsonb,
+  critic_report jsonb,
   created_at timestamptz NOT NULL
 );
 

@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from app.agents.state import AgentState
 from app.schemas import (
     ActionKind,
+    AgentCriticReport,
     AgentRunGenerationMode,
     AgentStepName,
     AgentStepStatus,
@@ -158,6 +159,74 @@ def plan_action_card(state: AgentState) -> AgentNodeResult:
     )
 
 
+def critique_action_card(state: AgentState) -> AgentNodeResult:
+    if state.action_card is None:
+        state.critic_report = AgentCriticReport(
+            grounded=False,
+            issues=["Action Card is missing."],
+            checked_items=[],
+        )
+        return AgentNodeResult(
+            step_name=AgentStepName.CRITIC_CHECK,
+            status=AgentStepStatus.FAILED,
+            input_summary="No Action Card was available for critic review.",
+            output_summary="Critic check could not run.",
+        )
+
+    checked_items = [
+        "schema_contract",
+        "proposal_completeness",
+        "approval_boundary",
+        "evidence_grounding",
+    ]
+    issues = _critic_issues(state)
+    state.critic_report = AgentCriticReport(
+        grounded=not issues,
+        issues=issues,
+        checked_items=checked_items,
+    )
+
+    if issues:
+        critic_notes = [f"Critic: {issue}" for issue in issues]
+        merged_notes = [
+            *state.action_card.safety_notes,
+            *(
+                note
+                for note in critic_notes
+                if note not in state.action_card.safety_notes
+            ),
+        ]
+        state.action_card = state.action_card.model_copy(
+            update={"safety_notes": merged_notes}
+        )
+
+    output = (
+        "Planner output passed grounding checks."
+        if not issues
+        else f"Planner output has {len(issues)} critic issue(s)."
+    )
+    return AgentNodeResult(
+        step_name=AgentStepName.CRITIC_CHECK,
+        status=AgentStepStatus.COMPLETED,
+        input_summary=f"Reviewed Action Card {state.action_card.id}.",
+        output_summary=output,
+        tool_calls=[
+            AgentToolCall(
+                name="critic_grounding_check",
+                input_summary=(
+                    "Checked planner output against proposal, approval, "
+                    "and evidence rules."
+                ),
+                output_summary=(
+                    "0 issues found."
+                    if not issues
+                    else f"{len(issues)} issues found."
+                ),
+            )
+        ],
+    )
+
+
 def check_safety(state: AgentState) -> AgentNodeResult:
     if state.action_card is None:
         return AgentNodeResult(
@@ -231,6 +300,53 @@ def approval_gate(state: AgentState) -> AgentNodeResult:
         input_summary=f"Checked approval boundary for {state.action_card.id}.",
         output_summary=output,
     )
+
+
+def _critic_issues(state: AgentState) -> list[str]:
+    if state.action_card is None:
+        return ["Action Card is missing."]
+
+    action_card = state.action_card
+    action_set = set(action_card.actions)
+    proposal = action_card.proposal
+    issues: list[str] = []
+
+    if ActionKind.DRAFT_REPLY in action_set and not proposal.reply_draft:
+        issues.append("draft_reply action is missing reply_draft.")
+    if ActionKind.PROPOSE_SCHEDULE in action_set and proposal.calendar_event is None:
+        issues.append("propose_schedule action is missing calendar_event.")
+    if ActionKind.CREATE_TODO in action_set and not proposal.todos:
+        issues.append("create_todo action is missing todos.")
+    if ActionKind.REQUEST_MISSING_INFO in action_set and not action_card.missing_info:
+        issues.append("request_missing_info action is missing missing_info.")
+
+    approval_actions = {
+        ActionKind.DRAFT_REPLY,
+        ActionKind.PROPOSE_SCHEDULE,
+    }
+    if (action_set & approval_actions or action_card.risk_level == RiskLevel.HIGH) and (
+        not action_card.approval_required
+    ):
+        issues.append("reviewable action does not require approval.")
+
+    unknown_evidence_ids = sorted(
+        set(action_card.evidence_ids)
+        - {item.id for item in state.all_evidence_items}
+    )
+    if unknown_evidence_ids:
+        issues.append(
+            "unknown evidence ids: "
+            f"{', '.join(unknown_evidence_ids)}."
+        )
+
+    terminal_actions = {
+        ActionKind.IGNORE,
+        ActionKind.REQUEST_MISSING_INFO,
+    }
+    if not action_card.evidence_ids and not action_set <= terminal_actions:
+        issues.append("reviewable action has no evidence ids.")
+
+    return issues
 
 
 def _rank_evidence_items(

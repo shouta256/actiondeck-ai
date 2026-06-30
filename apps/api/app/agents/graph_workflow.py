@@ -6,6 +6,7 @@ from app.agents.nodes import (
     AgentNodeResult,
     approval_gate,
     check_safety,
+    critique_action_card,
     plan_action_card,
     retrieve_evidence,
     triage,
@@ -93,6 +94,7 @@ def run_agent_graph_workflow(
         calendar_availability=to_calendar_availability_report(
             state.calendar_availability
         ),
+        critic_report=state.critic_report,
         generation_mode=state.generation_mode,
         fallback_reason=state.fallback_reason,
         route=state.route,
@@ -104,6 +106,7 @@ def _build_graph():
     graph_builder.add_node("triage", _node_runner(triage))
     graph_builder.add_node("retrieval", _node_runner(retrieve_evidence))
     graph_builder.add_node("planning", _node_runner(plan_action_card))
+    graph_builder.add_node("critic", _critic_node_runner())
     graph_builder.add_node("safety", _safety_node_runner())
     graph_builder.add_node("approval_gate", _node_runner(approval_gate))
     graph_builder.add_edge(START, "triage")
@@ -112,7 +115,7 @@ def _build_graph():
         _next_after_triage,
         {
             "continue": "retrieval",
-            "skip_to_safety": "safety",
+            "skip_to_critic": "critic",
         },
     )
     graph_builder.add_conditional_edges(
@@ -120,10 +123,11 @@ def _build_graph():
         _next_after_retrieval,
         {
             "continue": "planning",
-            "skip_to_safety": "safety",
+            "skip_to_critic": "critic",
         },
     )
-    graph_builder.add_edge("planning", "safety")
+    graph_builder.add_edge("planning", "critic")
+    graph_builder.add_edge("critic", "safety")
     graph_builder.add_edge("safety", "approval_gate")
     graph_builder.add_edge("approval_gate", END)
     return graph_builder.compile()
@@ -131,13 +135,13 @@ def _build_graph():
 
 def _next_after_triage(graph_state: GraphWorkflowState) -> str:
     if graph_state["agent_state"].route in TERMINAL_TRIAGE_ROUTES:
-        return "skip_to_safety"
+        return "skip_to_critic"
     return "continue"
 
 
 def _next_after_retrieval(graph_state: GraphWorkflowState) -> str:
     if graph_state["agent_state"].route in SKIP_PLANNING_AFTER_RETRIEVAL_ROUTES:
-        return "skip_to_safety"
+        return "skip_to_critic"
     return "continue"
 
 
@@ -153,17 +157,24 @@ def _node_runner(node):
     return run_graph_node
 
 
+def _critic_node_runner():
+    def run_critic_node(graph_state: GraphWorkflowState) -> GraphWorkflowState:
+        agent_state = graph_state["agent_state"]
+        _ensure_template_action_card_for_skipped_planning(agent_state)
+
+        node_result = run_agent_node(agent_state, critique_action_card)
+        return GraphWorkflowState(
+            agent_state=agent_state,
+            node_results=[*graph_state["node_results"], node_result],
+        )
+
+    return run_critic_node
+
+
 def _safety_node_runner():
     def run_safety_node(graph_state: GraphWorkflowState) -> GraphWorkflowState:
         agent_state = graph_state["agent_state"]
-        if agent_state.action_card is None:
-            agent_state.action_card = agent_state.template_action_card
-            agent_state.generation_mode = AgentRunGenerationMode.DETERMINISTIC_TEMPLATE
-            agent_state.fallback_reason = (
-                f"Graph route skipped planning for {agent_state.route.value}"
-                if agent_state.route
-                else "Graph route skipped planning"
-            )
+        _ensure_template_action_card_for_skipped_planning(agent_state)
 
         node_result = run_agent_node(agent_state, check_safety)
         return GraphWorkflowState(
@@ -172,3 +183,18 @@ def _safety_node_runner():
         )
 
     return run_safety_node
+
+
+def _ensure_template_action_card_for_skipped_planning(
+    agent_state: AgentState,
+) -> None:
+    if agent_state.action_card is not None:
+        return
+
+    agent_state.action_card = agent_state.template_action_card
+    agent_state.generation_mode = AgentRunGenerationMode.DETERMINISTIC_TEMPLATE
+    agent_state.fallback_reason = (
+        f"Graph route skipped planning for {agent_state.route.value}"
+        if agent_state.route
+        else "Graph route skipped planning"
+    )

@@ -6,6 +6,7 @@ from app.agents.nodes import AgentNodeResult
 from app.agents.state import AgentState
 from app.schemas import (
     ActionCard,
+    AgentCriticReport,
     AgentRunGenerationMode,
     AgentStepName,
     AgentStepStatus,
@@ -25,6 +26,7 @@ class AgentWorkflowResult:
     evidence_items: list[EvidenceItem]
     retrieved_evidence_items: list[EvidenceItem]
     calendar_availability: CalendarAvailabilityReport | None
+    critic_report: AgentCriticReport | None
     generation_mode: AgentRunGenerationMode
     fallback_reason: str | None
     route: AgentRoute | None
@@ -114,6 +116,7 @@ def _step_name_for_node(
         "triage": AgentStepName.TRIAGE,
         "retrieve_evidence": AgentStepName.EVIDENCE_RETRIEVAL,
         "plan_action_card": AgentStepName.ACTION_PLANNING,
+        "critique_action_card": AgentStepName.CRITIC_CHECK,
         "check_safety": AgentStepName.SAFETY_CHECK,
         "approval_gate": AgentStepName.APPROVAL_GATE,
     }

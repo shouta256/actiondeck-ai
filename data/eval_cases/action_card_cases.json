@@ -12,6 +12,7 @@
       "triage",
       "evidence_retrieval",
       "action_planning",
+      "critic_check",
       "safety_check",
       "approval_gate"
     ],
@@ -30,6 +31,7 @@
     "expected_step_names": [
       "triage",
       "evidence_retrieval",
+      "critic_check",
       "safety_check",
       "approval_gate"
     ],
@@ -46,6 +48,7 @@
     "expected_route": "missing_info",
     "expected_step_names": [
       "triage",
+      "critic_check",
       "safety_check",
       "approval_gate"
     ],
@@ -62,6 +65,7 @@
     "expected_route": "ignore",
     "expected_step_names": [
       "triage",
+      "critic_check",
       "safety_check",
       "approval_gate"
     ],
@@ -79,6 +83,7 @@
     "expected_step_names": [
       "triage",
       "evidence_retrieval",
+      "critic_check",
       "safety_check",
       "approval_gate"
     ],
@@ -97,6 +102,7 @@
       "triage",
       "evidence_retrieval",
       "action_planning",
+      "critic_check",
       "safety_check",
       "approval_gate"
     ],
@@ -120,6 +126,7 @@
     "expected_step_names": [
       "triage",
       "evidence_retrieval",
+      "critic_check",
       "safety_check",
       "approval_gate"
     ],
@@ -138,6 +145,7 @@
     "expected_step_names": [
       "triage",
       "evidence_retrieval",
+      "critic_check",
       "safety_check",
       "approval_gate"
     ],
@@ -156,6 +164,7 @@
       "triage",
       "evidence_retrieval",
       "action_planning",
+      "critic_check",
       "safety_check",
       "approval_gate"
     ],
@@ -172,6 +181,7 @@
     "expected_route": "missing_info",
     "expected_step_names": [
       "triage",
+      "critic_check",
       "safety_check",
       "approval_gate"
     ],
@@ -188,6 +198,7 @@
     "expected_route": "ignore",
     "expected_step_names": [
       "triage",
+      "critic_check",
       "safety_check",
       "approval_gate"
     ],
@@ -204,6 +215,7 @@
     "expected_route": "missing_info",
     "expected_step_names": [
       "triage",
+      "critic_check",
       "safety_check",
       "approval_gate"
     ],
