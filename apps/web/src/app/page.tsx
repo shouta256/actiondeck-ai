@@ -7,6 +7,7 @@ import {
   Layers3,
 } from "lucide-react";
 
+import { ActionPlanPanel } from "@/features/action-plan/action-plan-panel";
 import { listActionCards } from "@/features/action-cards/api";
 import type { ActionCard } from "@/features/action-cards/types";
 import { listAgentRuns } from "@/features/agent-runs/api";
@@ -145,6 +146,11 @@ export default async function Home() {
 
       <div className="mx-auto grid w-full max-w-7xl gap-6 px-6 py-8 lg:grid-cols-[minmax(0,1fr)_300px]">
         <section>
+          <ActionPlanPanel
+            initialActionPlan={null}
+            initialErrorMessage={errorMessage}
+          />
+
           <div className="mb-7 rounded-md border border-white bg-white p-6 shadow-sm shadow-neutral-200/70">
             <div className="mb-5 flex items-start gap-3">
               <span className="flex size-8 items-center justify-center rounded-md bg-blue-100 text-blue-700">
@@ -153,7 +159,7 @@ export default async function Home() {
               <div>
                 <h2 className="text-xl font-semibold">Demo Scenarios</h2>
                 <p className="mt-1 text-sm leading-6 text-neutral-500">
-                  まず見るべき代表ケースです。詳細画面で提案、安全確認、承認を確認します。
+                  代表ケースを開き、元メッセージを確認してAIで対応案を作ります。
                 </p>
               </div>
             </div>
@@ -193,9 +199,6 @@ export default async function Home() {
               <p className="mt-1 text-sm text-neutral-500">
                 ユーザー確認が必要なカードを優先して表示します。
               </p>
-              {errorMessage ? (
-                <p className="mt-2 text-sm text-red-700">{errorMessage}</p>
-              ) : null}
             </div>
           </div>
 

@@ -23,6 +23,7 @@ from app.schemas.action_card import (
     RiskLevel,
     TodoProposal,
 )
+from app.schemas.action_plan import ActionPlan, ActionPlanEffort, ActionPlanItem
 from app.schemas.calendar_event import CalendarEvent
 from app.schemas.calendar_availability import (
     CalendarAvailabilityCandidate,
@@ -54,6 +55,9 @@ __all__ = [
     "ActionCardEvalCaseResult",
     "ActionCardEvalRunResult",
     "ActionKind",
+    "ActionPlan",
+    "ActionPlanEffort",
+    "ActionPlanItem",
     "ActionProposal",
     "AgentStepName",
     "AgentCriticReport",

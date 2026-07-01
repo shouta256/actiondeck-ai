@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.routes.action_cards import router as action_cards_router
+from app.routes.action_plan import router as action_plan_router
 from app.routes.agent_runs import router as agent_runs_router
 from app.routes.calendar_events import router as calendar_events_router
 from app.routes.evaluations import router as evaluations_router
@@ -15,6 +16,7 @@ app = FastAPI(
 )
 
 app.include_router(action_cards_router)
+app.include_router(action_plan_router)
 app.include_router(agent_runs_router)
 app.include_router(calendar_events_router)
 app.include_router(evaluations_router)
