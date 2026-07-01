@@ -1,5 +1,6 @@
 "use client";
 
+import { LoaderCircle, Play } from "lucide-react";
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -25,21 +26,31 @@ export function RunAgentButton({
         const nextResult = await createAgentRun(inboxItemId);
         onRunCreated?.(nextResult);
       } catch {
-        setErrorMessage("Agent run failed.");
+        setErrorMessage("Agent run failed. APIを確認してください。");
       }
     });
   }
 
   return (
-    <div className="space-y-2">
+    <div className="w-full space-y-2 sm:w-auto">
       <Button
-        className="rounded-md"
+        className="w-full rounded-md px-4 sm:w-auto"
         disabled={isPending}
         onClick={handleRunAgent}
+        size="lg"
         type="button"
-        variant="outline"
       >
-        {isPending ? "Running" : "Run agent"}
+        {isPending ? (
+          <>
+            <LoaderCircle className="size-4 animate-spin" />
+            AIが確認中
+          </>
+        ) : (
+          <>
+            <Play className="size-4" />
+            AIで対応案を作る
+          </>
+        )}
       </Button>
 
       {errorMessage ? (

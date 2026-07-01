@@ -1,13 +1,10 @@
 import Link from "next/link";
 import {
   AlertTriangle,
-  CalendarDays,
   CheckCircle2,
   FileText,
   Info,
-  ListTodo,
   MessageSquare,
-  ShieldCheck,
 } from "lucide-react";
 import { notFound } from "next/navigation";
 
@@ -32,23 +29,6 @@ type PageProps = {
 
 function formatDateTime(value: string) {
   return value.replace("T", " ");
-}
-
-function Field({
-  label,
-  value,
-}: {
-  label: string;
-  value: string | number | boolean;
-}) {
-  return (
-    <div className="flex items-start justify-between gap-4 py-3 text-sm">
-      <dt className="text-neutral-500">{label}</dt>
-      <dd className="text-right font-medium leading-6 text-neutral-950">
-        {String(value)}
-      </dd>
-    </div>
-  );
 }
 
 function Section({
@@ -158,44 +138,11 @@ function Badge({
   );
 }
 
-function DecisionOverview({ card }: { card: ActionCard }) {
-  const hasCalendarConflict = card.safety_notes.some((note) =>
-    note.includes("衝突"),
-  );
-  const approvalTone = card.approval_required ? "amber" : "green";
-  const safetyTone = hasCalendarConflict ? "red" : "green";
-
-  return (
-    <section className="mb-6 rounded-md border border-white bg-white p-6 shadow-sm shadow-neutral-200/70">
-      <div className="flex flex-wrap items-start justify-between gap-5">
-        <div className="max-w-3xl">
-          <p className="text-sm font-medium text-blue-600">Action Card</p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-normal text-neutral-950">
-            {card.title}
-          </h1>
-          <p className="mt-3 text-base leading-7 text-neutral-700">
-            {card.summary}
-          </p>
-        </div>
-        <div className="flex flex-wrap justify-end gap-2">
-          <Badge tone={card.status === "pending_review" ? "amber" : "neutral"}>
-            {card.status === "pending_review" ? "Review needed" : card.status}
-          </Badge>
-          <Badge tone={approvalTone}>
-            {card.approval_required ? "Needs approval" : "Ready"}
-          </Badge>
-          <Badge tone={safetyTone}>
-            {hasCalendarConflict ? "Conflict found" : "Checked"}
-          </Badge>
-        </div>
-      </div>
-    </section>
-  );
-}
 function SourceMessagePanel({ item }: { item: InboxItem | null }) {
   return (
     <Section
-      title="Source Message"
+      title="メール内容"
+      description="この内容をAIが読み取り、対応案を作ります。"
       icon={<MessageSquare className="size-4" />}
     >
       {item ? (
@@ -216,18 +163,9 @@ function SourceMessagePanel({ item }: { item: InboxItem | null }) {
           <p className="mt-4 text-base font-semibold text-neutral-950">
             {item.subject}
           </p>
-          <details className="group mt-4 rounded-md bg-neutral-100/70 p-4">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-neutral-800">
-              <span>Message body</span>
-              <span className="text-sm font-medium text-blue-600">
-                <span className="group-open:hidden">open</span>
-                <span className="hidden group-open:inline">close</span>
-              </span>
-            </summary>
-            <p className="mt-4 whitespace-pre-wrap border-t border-neutral-200 pt-4 text-[15px] leading-7 text-neutral-700">
-              {item.body}
-            </p>
-          </details>
+          <p className="mt-4 whitespace-pre-wrap rounded-md bg-neutral-100/70 p-4 text-[15px] leading-7 text-neutral-700">
+            {item.body}
+          </p>
         </div>
       ) : (
         <EmptyText>元メッセージを表示できません。</EmptyText>
@@ -236,81 +174,11 @@ function SourceMessagePanel({ item }: { item: InboxItem | null }) {
   );
 }
 
-function ProposalPanel({ card }: { card: ActionCard }) {
-  const calendarEvent = card.proposal.calendar_event;
-  const hasReplyDraft = Boolean(card.proposal.reply_draft);
-  const hasTodos = card.proposal.todos.length > 0;
-
-  return (
-    <Section
-      title="Proposed Action"
-      icon={<CheckCircle2 className="size-4" />}
-    >
-      <div className="space-y-5">
-        {hasReplyDraft ? (
-          <div>
-            <h3 className="mb-2 text-[15px] font-semibold text-neutral-950">
-              Reply Draft
-            </h3>
-            <p className="whitespace-pre-wrap rounded-md bg-neutral-100/70 p-5 text-[15px] leading-7 text-neutral-800">
-              {card.proposal.reply_draft}
-            </p>
-          </div>
-        ) : null}
-
-        <div className="grid gap-4 md:grid-cols-2">
-          {calendarEvent ? (
-            <div>
-              <h3 className="mb-2 flex items-center gap-2 text-[15px] font-semibold text-neutral-950">
-                <CalendarDays className="size-4 text-neutral-500" />
-                Calendar Proposal
-              </h3>
-              <dl className="rounded-md bg-neutral-100/70 px-4">
-                <Field label="Title" value={calendarEvent.title} />
-                <Field label="Start" value={formatDateTime(calendarEvent.start)} />
-                <Field label="End" value={formatDateTime(calendarEvent.end)} />
-                <Field label="Location" value={calendarEvent.location ?? "-"} />
-              </dl>
-            </div>
-          ) : null}
-
-          {hasTodos ? (
-            <div>
-              <h3 className="mb-2 flex items-center gap-2 text-[15px] font-semibold text-neutral-950">
-                <ListTodo className="size-4 text-neutral-500" />
-                Todos
-              </h3>
-              <ul className="rounded-md bg-neutral-100/70 px-4">
-                {card.proposal.todos.map((todo) => (
-                  <li
-                    className="flex items-start justify-between gap-4 border-b border-neutral-200 py-3 text-sm last:border-b-0"
-                    key={`${todo.title}-${todo.due_date ?? "none"}`}
-                  >
-                    <span className="font-medium text-neutral-950">
-                      {todo.title}
-                    </span>
-                    <span className="shrink-0 text-neutral-500">
-                      {todo.due_date ?? "-"}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-        </div>
-
-        {!hasReplyDraft && !calendarEvent && !hasTodos ? (
-          <EmptyText>提案はありません。</EmptyText>
-        ) : null}
-      </div>
-    </Section>
-  );
-}
-
 function EvidencePanel({ evidenceItems }: { evidenceItems: EvidenceItem[] }) {
   return (
     <DisclosureSection
-      title="Evidence"
+      title="保存済みの根拠"
+      description="保存済みAction Cardに紐づく根拠です。"
       icon={<FileText className="size-4" />}
     >
       {evidenceItems.length > 0 ? (
@@ -419,36 +287,11 @@ function SafetyNoteList({ notes }: { notes: string[] }) {
   );
 }
 
-function SafetyPanel({ card }: { card: ActionCard }) {
-  return (
-    <Section
-      title="Safety"
-      icon={<ShieldCheck className="size-4" />}
-    >
-      <div className="space-y-4">
-        <SafetyNoteList notes={card.safety_notes} />
-
-        {card.missing_info.length > 0 ? (
-          <div>
-            <h3 className="mb-2 text-sm font-semibold text-neutral-800">
-              Missing Info
-            </h3>
-            <ul className="space-y-2 rounded border border-amber-200 bg-amber-50 p-3 text-sm leading-6 text-amber-900">
-              {card.missing_info.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-      </div>
-    </Section>
-  );
-}
-
 function AgentTracePanel({ steps }: { steps: AgentTraceStep[] }) {
   return (
     <DisclosureSection
-      title="Agent Trace"
+      title="保存済みの処理履歴"
+      description="保存済みAction Cardに紐づく履歴です。ボタン実行後の最新履歴は「AIが実行した最新結果」に表示されます。"
       icon={<Info className="size-4" />}
     >
       {steps.length > 0 ? (
@@ -512,46 +355,83 @@ function AgentTracePanel({ steps }: { steps: AgentTraceStep[] }) {
   );
 }
 
-function ReviewPanel({
+function SavedCardArchive({
   card,
+  evidenceItems,
+  agentSteps,
+  reviewEvents,
 }: {
   card: ActionCard;
+  evidenceItems: EvidenceItem[];
+  agentSteps: AgentTraceStep[];
+  reviewEvents: ReviewEvent[];
 }) {
   return (
-    <aside className="space-y-4">
-      <Section title="Review">
-        <div className="mb-4 flex flex-wrap gap-2">
-          <Badge tone={card.status === "pending_review" ? "amber" : "neutral"}>
-            {card.status}
-          </Badge>
-          <Badge tone={card.risk_level === "high" ? "red" : "neutral"}>
-            {card.risk_level} risk
-          </Badge>
+    <DisclosureSection
+      title="保存済みカード・レビュー"
+      description="事前に保存されているカード情報です。通常は上のAI生成結果だけ見れば十分です。"
+      icon={<Info className="size-4" />}
+    >
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-sm font-semibold text-neutral-950">
+            保存済みの対応案
+          </h3>
+          <p className="mt-2 text-sm leading-6 text-neutral-700">
+            {card.summary}
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {card.actions.map((action) => (
+              <Badge key={action}>{action}</Badge>
+            ))}
+          </div>
         </div>
-        <ReviewActions actionCardId={card.id} currentStatus={card.status} />
-      </Section>
 
-      <DisclosureSection
-        title="Card Details"
-        icon={<Info className="size-4" />}
-      >
-        <dl className="divide-y divide-neutral-100">
-          <Field label="Priority" value={card.priority} />
-          <Field label="Confidence" value={card.confidence.toFixed(2)} />
-          <Field label="Approval" value={card.approval_required} />
-          <Field label="Source" value={card.source_item_id} />
-          <Field label="ID" value={card.id} />
-        </dl>
-      </DisclosureSection>
-
-      <DisclosureSection title="Action Types" icon={<Info className="size-4" />}>
-        <div className="flex flex-wrap gap-2">
-          {card.actions.map((action) => (
-            <Badge key={action}>{action}</Badge>
-          ))}
+        <div>
+          <h3 className="text-sm font-semibold text-neutral-950">
+            保存済みの安全メモ
+          </h3>
+          <div className="mt-3">
+            <SafetyNoteList notes={card.safety_notes} />
+          </div>
         </div>
-      </DisclosureSection>
-    </aside>
+
+        <div>
+          <h3 className="text-sm font-semibold text-neutral-950">
+            レビュー状態
+          </h3>
+          <p className="mt-2 text-sm leading-6 text-neutral-600">
+            ここで変わるのはレビュー状態だけです。メール送信や予定登録は行いません。
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Badge tone={card.status === "pending_review" ? "amber" : "neutral"}>
+              {card.status}
+            </Badge>
+            <Badge tone={card.risk_level === "high" ? "red" : "neutral"}>
+              {card.risk_level} risk
+            </Badge>
+          </div>
+          <div className="mt-4 max-w-sm">
+            <ReviewActions actionCardId={card.id} currentStatus={card.status} />
+          </div>
+        </div>
+
+        <details className="group border-t border-neutral-100 pt-4">
+          <summary className="flex cursor-pointer list-none justify-between gap-4 text-sm font-semibold text-neutral-950">
+            <span>根拠・保存済みログ・レビュー履歴</span>
+            <span className="text-blue-600">
+              <span className="group-open:hidden">Show</span>
+              <span className="hidden group-open:inline">Hide</span>
+            </span>
+          </summary>
+          <div className="mt-4 space-y-4">
+            <EvidencePanel evidenceItems={evidenceItems} />
+            <AgentTracePanel steps={agentSteps} />
+            <ReviewHistoryPanel events={reviewEvents} />
+          </div>
+        </details>
+      </div>
+    </DisclosureSection>
   );
 }
 
@@ -586,26 +466,25 @@ export default async function ActionCardDetailPage({ params }: PageProps) {
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-7xl px-6 py-8">
-        <DecisionOverview card={card} />
+      <div className="mx-auto w-full max-w-4xl px-6 py-8">
+        <div className="mb-6">
+          <h1 className="text-2xl font-semibold text-neutral-950">
+            メールから対応案を作成
+          </h1>
+          <p className="mt-2 text-sm leading-6 text-neutral-600">
+            メール内容を確認し、AIで対応案を作ります。結果はボタンの下に表示されます。
+          </p>
+        </div>
 
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
-          <div className="space-y-5">
-            <ProposalPanel card={card} />
-            <SafetyPanel card={card} />
-            {sourceItem ? (
-              <AgentRunPanel inboxItemId={sourceItem.id} />
-            ) : null}
-            <SourceMessagePanel item={sourceItem} />
-            <div className="space-y-3">
-              <EvidencePanel evidenceItems={evidenceItems} />
-              <AgentTracePanel steps={agentSteps} />
-              <ReviewHistoryPanel events={reviewEvents} />
-            </div>
-          </div>
-          <div className="lg:sticky lg:top-6 lg:self-start">
-            <ReviewPanel card={card} />
-          </div>
+        <div className="space-y-5">
+          <SourceMessagePanel item={sourceItem} />
+          {sourceItem ? <AgentRunPanel inboxItemId={sourceItem.id} /> : null}
+          <SavedCardArchive
+            agentSteps={agentSteps}
+            card={card}
+            evidenceItems={evidenceItems}
+            reviewEvents={reviewEvents}
+          />
         </div>
       </div>
     </main>

@@ -4,7 +4,10 @@ import {
   AlertTriangle,
   CalendarDays,
   CheckCircle2,
+  GitBranch,
   Info,
+  ListTodo,
+  MessageSquare,
   ShieldCheck,
 } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
@@ -43,6 +46,33 @@ function formatLocalTimeRange(startValue: string, endValue: string) {
 
   return `${date} ${time.format(start)}-${time.format(end)}`;
 }
+
+const STEP_COPY: Record<string, { label: string; description: string }> = {
+  triage: {
+    label: "必要な対応を判定",
+    description: "返信・日程・ToDoが必要か確認",
+  },
+  evidence_retrieval: {
+    label: "根拠を集める",
+    description: "メモや予定から判断材料を取得",
+  },
+  action_planning: {
+    label: "対応案を作る",
+    description: "返信案・予定案・ToDoを作成",
+  },
+  critic_check: {
+    label: "案を点検する",
+    description: "根拠不足や承認漏れを確認",
+  },
+  safety_check: {
+    label: "安全を確認する",
+    description: "予定衝突や承認要否を確認",
+  },
+  approval_gate: {
+    label: "承認待ちで止める",
+    description: "自動実行せずユーザー確認へ",
+  },
+};
 
 function Field({
   label,
@@ -108,11 +138,234 @@ function ActionBadgeList({ actions }: { actions: ActionCard["actions"] }) {
   );
 }
 
+function buildDecisionTitle(card: ActionCard) {
+  const actions = new Set(card.actions);
+
+  if (actions.has("request_missing_info")) {
+    return "情報が足りないため、対応案を確定しません";
+  }
+  if (actions.has("ignore")) {
+    return "追加対応は不要と判断しました";
+  }
+  if (actions.has("draft_reply") && actions.has("propose_schedule")) {
+    return "返信案と予定候補をまとめました";
+  }
+  if (actions.has("draft_reply")) {
+    return "返信案を作成しました";
+  }
+  if (actions.has("propose_schedule")) {
+    return "予定候補を整理しました";
+  }
+  if (actions.has("create_todo")) {
+    return "外部連絡ではなく、確認タスクとして扱います";
+  }
+  return "対応内容を整理しました";
+}
+
+function buildDecisionReasons(run: AgentRunResult) {
+  const card = run.action_card;
+  const actions = new Set(card.actions);
+  const reasons: string[] = [];
+
+  if (actions.has("create_todo") && !actions.has("draft_reply")) {
+    reasons.push("返信や予定登録ではなく、自分が確認する作業として分離しました。");
+  }
+  if (actions.has("request_missing_info")) {
+    reasons.push("不足情報があるため、返信文や予定案を確定しない判断にしました。");
+  }
+  if (actions.has("ignore")) {
+    reasons.push("元メッセージに返信・予定・ToDo化が必要な強いシグナルがありません。");
+  }
+
+  const conflictCount =
+    run.calendar_availability?.candidates.filter(
+      (candidate) => !candidate.is_available,
+    ).length ?? 0;
+  if (conflictCount > 0) {
+    reasons.push("候補日時の一部が既存予定と衝突するため、注意が必要です。");
+  }
+
+  for (const item of run.evidence_items.slice(0, 2)) {
+    reasons.push(`${item.title}: ${item.snippet}`);
+  }
+
+  if (card.approval_required) {
+    reasons.push("メール送信や予定作成に関わるため、ユーザー承認で止めています。");
+  }
+
+  return reasons.slice(0, 4);
+}
+
+function buildNotExecutedItems(card: ActionCard) {
+  const actions = new Set(card.actions);
+  const items = ["メール送信はしていません", "予定登録はしていません"];
+
+  if (!actions.has("draft_reply")) {
+    items.push("返信案は作っていません");
+  }
+  if (!actions.has("propose_schedule")) {
+    items.push("予定案は作っていません");
+  }
+
+  return items;
+}
+
+function CreatedActionPlan({ run }: { run: AgentRunResult }) {
+  const card = run.action_card;
+  const replyDraft = card.proposal.reply_draft;
+  const calendarEvent = card.proposal.calendar_event;
+  const todos = card.proposal.todos;
+  const hasPlan = Boolean(replyDraft) || Boolean(calendarEvent) || todos.length > 0;
+  const isIgnored = card.actions.includes("ignore");
+  const needsMissingInfo = card.missing_info.length > 0;
+  const decisionReasons = buildDecisionReasons(run);
+  const notExecutedItems = buildNotExecutedItems(card);
+
+  return (
+    <div className="border-t border-neutral-200 pt-3">
+      <div className="mb-3">
+        <h4 className="text-[15px] font-semibold text-neutral-950">
+          AIの判断結果
+        </h4>
+        <p className="mt-1 text-xs leading-5 text-neutral-500">
+          ここがボタンを押した結果です。AIは実行せず、対応判断と案だけを作ります。
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        <div className="rounded-md bg-blue-50 p-4 text-blue-950">
+          <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+            結論
+          </p>
+          <p className="mt-2 text-base font-semibold leading-7">
+            {buildDecisionTitle(card)}
+          </p>
+          <p className="mt-2 text-sm leading-6">
+            {card.summary}
+          </p>
+        </div>
+
+        {decisionReasons.length > 0 ? (
+          <div className="rounded-md bg-neutral-50 p-4">
+            <h5 className="text-sm font-semibold text-neutral-950">
+              判断理由
+            </h5>
+            <ul className="mt-2 space-y-2 text-sm leading-6 text-neutral-700">
+              {decisionReasons.map((reason) => (
+                <li className="flex gap-2" key={reason}>
+                  <span className="mt-2 size-1.5 shrink-0 rounded-full bg-neutral-400" />
+                  <span>{reason}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
+        {replyDraft ? (
+          <div className="rounded-md bg-neutral-50 p-4">
+            <div className="mb-2 flex items-center gap-2">
+              <MessageSquare className="size-4 text-neutral-500" />
+              <h5 className="text-sm font-semibold text-neutral-950">
+                返信案
+              </h5>
+            </div>
+            <p className="whitespace-pre-wrap text-sm leading-6 text-neutral-800">
+              {replyDraft}
+            </p>
+          </div>
+        ) : null}
+
+        {calendarEvent ? (
+          <div className="rounded-md bg-neutral-50 p-4">
+            <div className="mb-2 flex items-center gap-2">
+              <CalendarDays className="size-4 text-neutral-500" />
+              <h5 className="text-sm font-semibold text-neutral-950">
+                予定案
+              </h5>
+            </div>
+            <dl className="grid gap-2 text-sm sm:grid-cols-2">
+              <Field label="予定名" value={calendarEvent.title} />
+              <Field
+                label="日時"
+                value={formatLocalTimeRange(calendarEvent.start, calendarEvent.end)}
+              />
+              <Field label="場所" value={calendarEvent.location ?? "-"} />
+            </dl>
+          </div>
+        ) : null}
+
+        {todos.length > 0 ? (
+          <div className="rounded-md bg-neutral-50 p-4">
+            <div className="mb-2 flex items-center gap-2">
+              <ListTodo className="size-4 text-neutral-500" />
+              <h5 className="text-sm font-semibold text-neutral-950">
+                作成された確認タスク
+              </h5>
+            </div>
+            <ul className="space-y-2">
+              {todos.map((todo) => (
+                <li
+                  className="flex items-start justify-between gap-3 rounded-md bg-white px-3 py-2 text-sm"
+                  key={`${todo.title}-${todo.due_date ?? "none"}`}
+                >
+                  <span className="font-medium text-neutral-950">
+                    {todo.title}
+                  </span>
+                  <span className="shrink-0 text-xs text-neutral-500">
+                    {todo.due_date ?? "期限なし"}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
+        {needsMissingInfo ? (
+          <div className="rounded-md bg-amber-50 p-4 text-amber-950">
+            <h5 className="text-sm font-semibold">追加で確認が必要なこと</h5>
+            <ul className="mt-2 space-y-1 text-sm leading-6">
+              {card.missing_info.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
+        {!hasPlan && isIgnored ? (
+          <div className="rounded-md bg-neutral-50 p-4 text-sm leading-6 text-neutral-700">
+            AIは、このメッセージには追加対応が不要だと判断しました。
+          </div>
+        ) : null}
+
+        {!hasPlan && !isIgnored && !needsMissingInfo ? (
+          <div className="rounded-md bg-neutral-50 p-4 text-sm leading-6 text-neutral-700">
+            具体的な返信案・予定案・ToDo案は作成されませんでした。
+          </div>
+        ) : null}
+
+        <div className="rounded-md bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-950">
+          <p className="font-semibold">まだ実行していないこと</p>
+          <ul className="mt-1 flex flex-wrap gap-2">
+            {notExecutedItems.map((item) => (
+              <li className="rounded-md bg-white/70 px-2 py-1 text-xs" key={item}>
+                {item}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2">
+            次に、内容を確認して必要ならレビュー欄で承認・編集済み・却下を選びます。
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function GeneratedCardSummary({ card }: { card: ActionCard }) {
   return (
     <div className="border-t border-neutral-200 pt-3">
       <h4 className="text-xs font-semibold text-neutral-700">
-        Generated Action Card
+        カード情報
       </h4>
       <div className="mt-3 space-y-3">
         <div>
@@ -136,7 +389,7 @@ function GeneratedCardSummary({ card }: { card: ActionCard }) {
 function RunEvidenceList({ evidenceItems }: { evidenceItems: EvidenceItem[] }) {
   return (
     <RunDisclosure
-      title="Run Evidence"
+      title="参照した根拠"
       description="この実行で参照した根拠です。"
     >
       {evidenceItems.length > 0 ? (
@@ -183,7 +436,7 @@ function CalendarAvailabilityPanel({
             <CalendarDays className="size-4" />
           </span>
           <h4 className="text-[15px] font-semibold text-neutral-950">
-            Availability
+            予定候補の確認結果
           </h4>
         </div>
         {report.fallback_reason ? (
@@ -196,7 +449,7 @@ function CalendarAvailabilityPanel({
       {report.candidates.length > 0 ? (
         <ul className="mt-3 space-y-2">
           {report.candidates.map((candidate) => {
-            const status = candidate.is_available ? "available" : "conflict";
+            const status = candidate.is_available ? "空きあり" : "衝突あり";
             const Icon = candidate.is_available ? CheckCircle2 : AlertTriangle;
             return (
               <li
@@ -244,6 +497,59 @@ function CalendarAvailabilityPanel({
   );
 }
 
+function RunStepRail({ steps }: { steps: AgentTraceStep[] }) {
+  if (steps.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="border-t border-neutral-200 pt-3">
+      <div className="mb-3 flex items-center gap-2">
+        <span className="flex size-7 items-center justify-center rounded-md bg-neutral-100 text-neutral-700">
+          <GitBranch className="size-4" />
+        </span>
+        <h4 className="text-[15px] font-semibold text-neutral-950">
+          AIの確認ステップ
+        </h4>
+      </div>
+      <ol className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+        {steps.map((step) => (
+          <li
+            className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2"
+            key={`${step.action_card_id}-${step.sequence}`}
+          >
+            {(() => {
+              const copy = STEP_COPY[step.step_name] ?? {
+                label: step.step_name,
+                description: step.output_summary,
+              };
+
+              return (
+                <>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono text-[11px] text-neutral-500">
+                      {String(step.sequence).padStart(2, "0")}
+                    </span>
+                    <span className="rounded bg-white px-1.5 py-0.5 text-[11px] font-medium text-neutral-600">
+                      {step.status === "completed" ? "完了" : step.status}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm font-medium text-neutral-950">
+                    {copy.label}
+                  </p>
+                  <p className="mt-1 line-clamp-2 text-xs leading-5 text-neutral-500">
+                    {copy.description}
+                  </p>
+                </>
+              );
+            })()}
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
 function CriticReportPanel({
   report,
 }: {
@@ -270,12 +576,12 @@ function CriticReportPanel({
           </span>
           <div>
             <h4 className="text-[15px] font-semibold text-neutral-950">
-              Critic Check
+              案の点検結果
             </h4>
             <p className="mt-1 text-xs leading-5 text-neutral-500">
               {hasIssues
-                ? "Planner output needs review."
-                : "Planner output passed grounding checks."}
+                ? "根拠や承認条件に確認が必要な点があります。"
+                : "根拠、提案内容、承認条件に大きな問題はありません。"}
             </p>
           </div>
         </div>
@@ -286,7 +592,7 @@ function CriticReportPanel({
               : "shrink-0 rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700"
           }
         >
-          {hasIssues ? `${report.issues.length} issues` : "grounded"}
+          {hasIssues ? `確認あり ${report.issues.length}件` : "問題なし"}
         </span>
       </div>
 
@@ -309,8 +615,8 @@ function CriticReportPanel({
 function RunTraceList({ steps }: { steps: AgentTraceStep[] }) {
   return (
     <RunDisclosure
-      title="Run Trace"
-      description="nodeの実行順と出力です。"
+      title="開発者向けの詳細ログ"
+      description="各処理の入出力とtool callです。通常は開かなくても確認できます。"
     >
       {steps.length > 0 ? (
         <ol className="mt-2 divide-y divide-neutral-200">
@@ -344,7 +650,7 @@ function RunTraceList({ steps }: { steps: AgentTraceStep[] }) {
 function RunMetadata({ run }: { run: AgentRunResult }) {
   return (
     <RunDisclosure
-      title="Run Metadata"
+      title="実行メタデータ"
       description="LLM設定、fallback、run idなどの技術情報です。"
     >
       <dl className="grid gap-2 text-xs sm:grid-cols-2">
@@ -364,10 +670,13 @@ function RunMetadata({ run }: { run: AgentRunResult }) {
 function RunDetails({ run }: { run: AgentRunResult }) {
   return (
     <RunDisclosure
-      title="Run Details"
-      description="生成結果、根拠、Trace、LLM設定を確認します。"
+      title="詳細を見る"
+      description="AIが何を確認したか、根拠、詳細ログを確認します。"
     >
       <div className="space-y-3">
+        <RunStepRail steps={run.agent_steps} />
+        <CalendarAvailabilityPanel report={run.calendar_availability} />
+        <CriticReportPanel report={run.critic_report} />
         <GeneratedCardSummary card={run.action_card} />
         <RunEvidenceList evidenceItems={run.evidence_items} />
         <RunTraceList steps={run.agent_steps} />
@@ -400,9 +709,14 @@ export function AgentRunPanel({ inboxItemId }: { inboxItemId: string }) {
           <span className="flex size-7 items-center justify-center rounded-md bg-neutral-100 text-neutral-700">
             <Info className="size-4" />
           </span>
-          <h3 className="text-[15px] font-semibold text-neutral-950">
-            Agent Check
-          </h3>
+          <div>
+            <h3 className="text-[15px] font-semibold text-neutral-950">
+              AIで対応案を作る
+            </h3>
+            <p className="mt-1 text-xs leading-5 text-neutral-500">
+              元メッセージを読み取り、根拠検索、対応案作成、安全確認まで実行します。
+            </p>
+          </div>
         </div>
         <RunAgentButton
           inboxItemId={inboxItemId}
@@ -415,16 +729,15 @@ export function AgentRunPanel({ inboxItemId }: { inboxItemId: string }) {
       <div className="mt-4">
         {latestRun ? (
           <div className="space-y-3">
-            <CalendarAvailabilityPanel
-              report={latestRun.calendar_availability}
-            />
-            <CriticReportPanel report={latestRun.critic_report} />
+            <CreatedActionPlan run={latestRun} />
             <RunDetails run={latestRun} />
           </div>
         ) : (
-          <p className="text-xs text-neutral-500">
-            {isPending ? "Loading" : "実行履歴はまだありません。"}
-          </p>
+          <div className="rounded-md bg-neutral-100/70 p-4 text-sm leading-6 text-neutral-600">
+            {isPending
+              ? "Loading"
+              : "まだ未実行です。ボタンを押すと、AIが何を確認したかと結果がここに表示されます。"}
+          </div>
         )}
       </div>
     </section>

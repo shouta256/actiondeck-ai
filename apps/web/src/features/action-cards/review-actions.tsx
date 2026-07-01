@@ -18,16 +18,16 @@ type ReviewAction = {
 
 const REVIEW_ACTIONS: ReviewAction[] = [
   {
-    label: "Approve",
+    label: "承認済みにする",
     status: "approved",
   },
   {
-    label: "Mark edited",
+    label: "編集済みにする",
     status: "edited",
     variant: "outline",
   },
   {
-    label: "Reject",
+    label: "却下する",
     status: "rejected",
     variant: "ghost",
   },
@@ -75,7 +75,7 @@ export function ReviewActions({
         await updateActionCardStatus(actionCardId, status);
         router.refresh();
       } catch {
-        setErrorMessage("Status update failed.");
+        setErrorMessage("レビュー状態を更新できませんでした。");
       } finally {
         setSelectedStatus(null);
       }
@@ -95,7 +95,7 @@ export function ReviewActions({
             variant={action.variant}
           >
             <ActionIcon status={action.status} />
-            {selectedStatus === action.status ? "Saving" : action.label}
+            {selectedStatus === action.status ? "保存中" : action.label}
           </Button>
         ))}
       </div>
